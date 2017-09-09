@@ -17,22 +17,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.transform.Affine;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 public class Login extends Application {
     
     private Stage primaryS;
-    //private Canvas canvas;
-    //private GraphicsContext gc;
     
     private int cWidth = 500;
     
@@ -52,14 +45,6 @@ public class Login extends Application {
     private Rectangle rectangle = new Rectangle();
     private final Line[] lines = new Line[5];
     private Rotate rotate;
-    
-    //double x = 50;
-    //double y = 100;
-    //double width = 10;
-    //double height = 20;
-    //int angle = 0;
-   
-    
 
     @Override
     public void start(Stage primaryStage) {
@@ -83,10 +68,6 @@ public class Login extends Application {
         makeLabels(grid);
         makeTextFields(grid);
         makeButtons(grid);
-
-        //Scene scene = new Scene(grid, 300, 275);
-        //primaryStage.setScene(scene);
-        //primaryStage.show();
         
         drawScene(grid);
         
@@ -95,25 +76,14 @@ public class Login extends Application {
     private void drawScene(GridPane grid) {
         
         Group root = new Group();
-        //System.out.println("Drawscene");
-        
-        //canvas = new Canvas(500, 600);
-        //gc = canvas.getGraphicsContext2D();
-        //drawShapes();
-        //r.setVisible(false);
 
         setRect();
         createLines();
         
-        
-        
-        //root.getChildren().add(canvas);
         root.getChildren().add(rectangle);
-        for (Line line : lines) {
+        for (Line line : lines) 
             root.getChildren().add(line);
-        }
-       
-        
+
         HBox hBox = new HBox(10, root, grid);
         
         primaryS.setScene(new Scene(hBox, 800, 600));
@@ -227,38 +197,15 @@ public class Login extends Application {
             public void handle(ActionEvent e) {
                 actiontarget.setFill(Color.FIREBRICK);
                 actiontarget.setText("Processing");
-                //reset(Color.WHITE);
-                //drawShapes();
-                //System.out.println(userTextField.getText());
-                
-                //rectangle.getTransforms().add(rotate);
-                //System.out.println(rotate.getAngle());
-                //lines[4].setEndX(20);
                 if (checkValidData()) {
                     actiontarget.setText("Processing");
                     setPos();
                 } else
                     actiontarget.setText("Try again");
-                    
-                
-                
-                /*double rotationCenterX = (x + width) / 2;
-                double rotationCenterY = (y + height) / 2;
 
-                angle += 45;
-                
-                gc.setFill(Color.GREEN);
-                
-                gc.save();
-                gc.transform(new Affine(new Rotate(angle, x, y)));
-                gc.fillRect(100, 50, width, height);
-                gc.restore();
-                
-                gc.fillOval(10, 60, 30, 30);*/
             }
 
         });
-        
         
         Button btn1 = new Button("Change angle");
         HBox hbBtn1 = new HBox(10);
@@ -311,13 +258,13 @@ public class Login extends Application {
                     
                 actiontarget2.setText("Processing");
                     
-                int dX = (int)(stLength * Math.cos(angleF));
-                int dY = (int)(stLength * (int)Math.sin(angleF));
+                int dX = (int)(rWidth * stLength * Math.cos(angleF));
+                //int dY = (int)(rWidth * stLength * (int)Math.sin(angleF));
                 
                 beginX += dX;
-                beginY += dY;
+                //beginY += dY;
                 
-                changeRectPos(dX, dY);
+                changeRectPos(dX);
                 } else {
                     actiontarget2.setText("Can`t move");
                 }
@@ -340,12 +287,12 @@ public class Login extends Application {
                     
     }
     
-    private void changeRectPos(int dX, int dY) {
+    private void changeRectPos(int dX) {
         setRect();
         lines[4].setStartX(rectangle.getX() + rectangle.getWidth() / 2);
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
         lines[4].setEndX(lines[4].getEndX() + dX);
-        lines[4].setEndY(lines[4].getEndY() + dY);
+        //lines[4].setEndY(lines[4].getEndY() + dY);
     }
     
     private boolean checkValidData() {
