@@ -254,20 +254,23 @@ public class Login extends Application {
                 
                 stLength = Integer.valueOf(stepLength.getText());
                 
-                if (canMove()) {
-                    
                 actiontarget2.setText("Processing");
                     
-                int dX = (int)(rWidth * stLength * Math.cos(angleF));
+                int dX = (int)(rWidth * stLength/* * Math.cos(angleF)*/);
                 //int dY = (int)(rWidth * stLength * (int)Math.sin(angleF));
                 
                 beginX += dX;
                 //beginY += dY;
                 
                 changeRectPos(dX);
-                } else {
+                
+                if (canMove())
+                    
+                actiontarget2.setText("Mooving");
+
+                 else 
                     actiontarget2.setText("Can`t move");
-                }
+                
                 
             }
 
@@ -312,12 +315,22 @@ public class Login extends Application {
         }
     
     private boolean canMove() {
+        int dX;
+        boolean trig = true;
                 for (int i = 0; i < 4; ++i)
-                    if (lines[i].intersects(lines[4].getBoundsInParent()))
-                        return false;
+                        while (lines[i].intersects(rectangle.getBoundsInParent()) 
+                                || rectangle.getX() > cWidth || rectangle.getX() < 0
+                                || rectangle.getY() > cWidth || rectangle.getY() <0) {
+                            dX = (int)(-rWidth);
+                            //System.out.println(dX);
+                            beginX += dX;
+                            
+                            changeRectPos(dX);
+                            trig = false;
+                        }
                         
                         
-                return true;
+                return trig;
     }
     
     private void checkRotateCollisions() {
