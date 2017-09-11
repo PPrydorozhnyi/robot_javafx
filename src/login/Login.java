@@ -39,7 +39,7 @@ public class Login extends Application {
     private int rWidth = 40;
     private int angleF = 0;
     
-    private Rectangle rectangle = new Rectangle();
+    private Rectangle rectangle;
     private final Line[] lines = new Line[5];
     private Rotate rotate;
 
@@ -65,6 +65,7 @@ public class Login extends Application {
         makeLabels(grid);
         makeTextFields(grid);
         makeButtons(grid);
+
         
         drawScene(grid);
         
@@ -76,7 +77,7 @@ public class Login extends Application {
 
         setRect();
         createLines();
-        
+
         root.getChildren().add(rectangle);
         for (Line line : lines) 
             root.getChildren().add(line);
@@ -89,6 +90,10 @@ public class Login extends Application {
     }
     
     private void setRect() {
+
+        //CHANGED
+        rectangle = new Rectangle();
+
         rectangle.setX(beginX);
         rectangle.setY(beginY);
         rectangle.setWidth(rWidth);
@@ -127,7 +132,7 @@ public class Login extends Application {
         lines[4] = new Line();
         lines[4].setStartX(rectangle.getX() + rectangle.getWidth() / 2);
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
-        lines[4].setEndX(cWidth);
+        lines[4].setEndX(rectangle.getX() + rectangle.getWidth() / 2 + 40);
         lines[4].setEndY(rectangle.getY() + rectangle.getHeight() / 2);
     }
     
@@ -193,7 +198,11 @@ public class Login extends Application {
             actiontarget.setText("Processing");
             if (checkValidData()) {
                 actiontarget.setText("Processing");
+                //setPos();
+                //CHANGED
+                drawScene(grid);
                 setPos();
+
             } else
                 actiontarget.setText("Try again");
 
@@ -214,10 +223,20 @@ public class Login extends Application {
         btn1.setOnAction(e -> {
             actiontarget1.setFill(Color.FIREBRICK);
             actiontarget1.setText("Processing");
-            angleF = Integer.valueOf(angle1Field.getText());
+            //CHANGED
+            //angleF = Integer.valueOf(angle1Field.getText());
 
             if (angleF < 0)
-                angleF += 360;
+                angleF += 360 + Integer.valueOf(angle1Field.getText());
+            else
+                angleF += Integer.valueOf(angle1Field.getText());
+
+            if (angleF >= 360)
+                angleF = angleF - (int) (angleF / 360) * 360;
+
+            System.out.println(angleF);
+
+            drawScene(grid);
             setPos();
         });
         
@@ -233,6 +252,7 @@ public class Login extends Application {
         GridPane.setHalignment(actiontarget2, RIGHT);
         actiontarget2.setId("actiontarget2");
 
+        //TODO : fix rotation logic
         btn2.setOnAction(e -> {
             actiontarget2.setFill(Color.FIREBRICK);
 
@@ -242,6 +262,8 @@ public class Login extends Application {
 
 
             moving(actiontarget2);
+            drawScene(grid);
+            lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
 
         });
     }
@@ -249,19 +271,29 @@ public class Login extends Application {
     private void moving(Text actiontarget) {
 
         int dx;
+        int dy;
+        int prevX = beginX;
+        int prevY = beginY;
 
         while (stLength-- > 0) {
 
-            System.out.println(stLength);
+            //System.out.println(stLength);
 
-            dx = rWidth;
+            dx = (int)(rWidth * Math.cos(Math.toRadians(angleF)));
+            dy = (int)(rWidth * Math.sin(Math.toRadians(angleF)));
+
+            System.out.println("angleF = " + angleF);
+            System.out.println("sin = " + Math.sin(Math.toRadians(angleF)));
+            System.out.println("cos = " + Math.cos(Math.toRadians(angleF)));
+            System.out.println("dx = " + dx);
+            System.out.println("dy = " + dy);
 
             beginX += dx;
-            //beginY += dY;
+            beginY += dy;
 
-            changeRectPos(dx);
+            changeRectPos(dx, dy);
 
-            if (canMove())
+            if (canMove(prevX , prevY))
 
                 actiontarget.setText("Mooving");
 
@@ -280,24 +312,29 @@ public class Login extends Application {
         rectangle.getTransforms().add(rotate);
         lines[4].setStartX(rectangle.getX() + rectangle.getWidth() / 2);
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
-        lines[4].setEndX(cWidth);
+        lines[4].setEndX(rectangle.getX() + rectangle.getWidth() / 2 + 40);
         lines[4].setEndY(rectangle.getY() + rectangle.getHeight() / 2);
         checkRotateCollisions();
                     
     }
     
-    private void changeRectPos(int dX) {
+    private void changeRectPos(int dX, int dY) {
         setRect();
+        //drawScene();
+        rotate = new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2);
+        rectangle.getTransforms().add(rotate);
+        //lines[4].getTransforms().add(rotate);
         lines[4].setStartX(rectangle.getX() + rectangle.getWidth() / 2);
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
         lines[4].setEndX(lines[4].getEndX() + dX);
-        //lines[4].setEndY(lines[4].getEndY() + dY);
+        lines[4].setEndY(lines[4].getEndY() + dY);
+        checkRotateCollisions();
     }
     
     private boolean checkValidData() {
         
         if (beginCoordX.getText() == null || beginCoordY.getText() == null
-                || stepLength.getText() == null 
+                || stepLength.getText() == null
                 || robWidth.getText() == null || angleField.getText() == null)
             return false;
                 
@@ -306,22 +343,32 @@ public class Login extends Application {
         stLength = Integer.valueOf(stepLength.getText());
         rWidth = Integer.valueOf(robWidth.getText());
         angleF = Integer.valueOf(angleField.getText());
+
+        if (angleF >= 360)
+            angleF = angleF - (int) (angleF / 360) * 360;
+
+        //System.out.println(angleF);
         
         return true;
         }
     
-    private boolean canMove() {
+    private boolean canMove(int prevX, int prevY) {
         int dX;
+        int dY;
         boolean trig = true;
                 for (int i = 0; i < 4; ++i)
                         while (lines[i].intersects(rectangle.getBoundsInParent()) 
                                 /*|| rectangle.getX() > cWidth || rectangle.getX() < 0
                                 || rectangle.getY() > cWidth || rectangle.getY() <0*/) {
-                            dX = -rWidth;
+                            //dX = -rWidth;
                             //System.out.println(dX);
-                            beginX += dX;
+                            dX = prevX - beginX;
+                            dY = prevY - beginY;
+
+                            beginX = prevX;
+                            beginY = prevY;
                             
-                            changeRectPos(dX);
+                            changeRectPos(dX, dY);
                             trig = false;
                         }
                         
