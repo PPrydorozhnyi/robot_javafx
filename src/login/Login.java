@@ -1,6 +1,3 @@
-
-package login;
-
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -191,19 +188,14 @@ public class Login extends Application {
         GridPane.setHalignment(actiontarget, RIGHT);
         actiontarget.setId("actiontarget");
 
-        btn.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
-            public void handle(ActionEvent e) {
-                actiontarget.setFill(Color.FIREBRICK);
+        btn.setOnAction(e -> {
+            actiontarget.setFill(Color.FIREBRICK);
+            actiontarget.setText("Processing");
+            if (checkValidData()) {
                 actiontarget.setText("Processing");
-                if (checkValidData()) {
-                    actiontarget.setText("Processing");
-                    setPos();
-                } else
-                    actiontarget.setText("Try again");
-
-            }
+                setPos();
+            } else
+                actiontarget.setText("Try again");
 
         });
         
@@ -219,19 +211,14 @@ public class Login extends Application {
         GridPane.setHalignment(actiontarget1, RIGHT);
         actiontarget1.setId("actiontarget1");
 
-        btn1.setOnAction(new EventHandler<ActionEvent>() {
+        btn1.setOnAction(e -> {
+            actiontarget1.setFill(Color.FIREBRICK);
+            actiontarget1.setText("Processing");
+            angleF = Integer.valueOf(angle1Field.getText());
 
-            @Override
-            public void handle(ActionEvent e) {
-                actiontarget1.setFill(Color.FIREBRICK);
-                actiontarget1.setText("Processing");
-                angleF = Integer.valueOf(angle1Field.getText());
-                
-                if (angleF < 0)
-                    angleF += 360;
-                setPos();
-            }
-
+            if (angleF < 0)
+                angleF += 360;
+            setPos();
         });
         
         Button btn2 = new Button("Rotate");
@@ -246,35 +233,44 @@ public class Login extends Application {
         GridPane.setHalignment(actiontarget2, RIGHT);
         actiontarget2.setId("actiontarget2");
 
-        btn2.setOnAction(new EventHandler<ActionEvent>() {
+        btn2.setOnAction(e -> {
+            actiontarget2.setFill(Color.FIREBRICK);
 
-            @Override
-            public void handle(ActionEvent e) {
-                actiontarget2.setFill(Color.FIREBRICK);
-                
-                stLength = Integer.valueOf(stepLength.getText());
-                
-                actiontarget2.setText("Processing");
-                    
-                int dX = (int)(rWidth * stLength/* * Math.cos(angleF)*/);
-                //int dY = (int)(rWidth * stLength * (int)Math.sin(angleF));
-                
-                beginX += dX;
-                //beginY += dY;
-                
-                changeRectPos(dX);
-                
-                if (canMove())
-                    
-                actiontarget2.setText("Mooving");
+            stLength = Integer.valueOf(stepLength.getText());
 
-                 else 
-                    actiontarget2.setText("Can`t move");
-                
-                
-            }
+            actiontarget2.setText("Processing");
+
+
+            moving(actiontarget2);
 
         });
+    }
+
+    private void moving(Text actiontarget) {
+
+        int dx;
+
+        while (stLength-- > 0) {
+
+            System.out.println(stLength);
+
+            dx = rWidth;
+
+            beginX += dx;
+            //beginY += dY;
+
+            changeRectPos(dx);
+
+            if (canMove())
+
+                actiontarget.setText("Mooving");
+
+            else {
+                actiontarget.setText("Can`t move");
+                break;
+            }
+        }
+
     }
     
     private void setPos() {
@@ -319,9 +315,9 @@ public class Login extends Application {
         boolean trig = true;
                 for (int i = 0; i < 4; ++i)
                         while (lines[i].intersects(rectangle.getBoundsInParent()) 
-                                || rectangle.getX() > cWidth || rectangle.getX() < 0
-                                || rectangle.getY() > cWidth || rectangle.getY() <0) {
-                            dX = (int)(-rWidth);
+                                /*|| rectangle.getX() > cWidth || rectangle.getX() < 0
+                                || rectangle.getY() > cWidth || rectangle.getY() <0*/) {
+                            dX = -rWidth;
                             //System.out.println(dX);
                             beginX += dX;
                             
