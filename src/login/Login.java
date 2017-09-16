@@ -96,7 +96,7 @@ public class Login extends Application {
 
         rectangle.setX(beginX);
         rectangle.setY(beginY);
-        rectangle.setWidth(rWidth);
+        rectangle.setWidth(2 * rWidth);
         rectangle.setHeight(rWidth);
         rectangle.setArcWidth(20);
         rectangle.setArcHeight(20);
@@ -128,12 +128,13 @@ public class Login extends Application {
         lines[3].setStartY(0);
         lines[3].setEndX(0);
         lines[3].setEndY(0);
-        
+
         lines[4] = new Line();
-        lines[4].setStartX(rectangle.getX() + rectangle.getWidth() / 2);
+        lines[4].setStartX(rectangle.getX()/* + rectangle.getWidth() / 2*/);
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
-        lines[4].setEndX(rectangle.getX() + rectangle.getWidth() / 2 + 40);
+        lines[4].setEndX(rectangle.getX() + rectangle.getWidth() / 2 + rectangle.getWidth() + 40);
         lines[4].setEndY(rectangle.getY() + rectangle.getHeight() / 2);
+        lines[4].setStroke(Color.CORAL);
     }
     
     private void makeLabels(GridPane grid) {
@@ -200,8 +201,9 @@ public class Login extends Application {
                 actiontarget.setText("Processing");
                 //setPos();
                 //CHANGED
-                drawScene(grid);
                 setPos();
+                drawScene(grid);
+                rotateRect();
 
             } else
                 actiontarget.setText("Try again");
@@ -236,8 +238,9 @@ public class Login extends Application {
 
             System.out.println(angleF);
 
-            drawScene(grid);
             setPos();
+            drawScene(grid);
+            rotateRect();
         });
         
         Button btn2 = new Button("Rotate");
@@ -263,7 +266,8 @@ public class Login extends Application {
 
             moving(actiontarget2);
             drawScene(grid);
-            lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
+            //lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
+            rotateRect();
 
         });
     }
@@ -279,8 +283,8 @@ public class Login extends Application {
 
             //System.out.println(stLength);
 
-            dx = (int)(rWidth * Math.cos(Math.toRadians(angleF)));
-            dy = (int)(rWidth * Math.sin(Math.toRadians(angleF)));
+            dx = (int)(rectangle.getWidth() * Math.cos(Math.toRadians(angleF)));
+            dy = (int)(rectangle.getWidth() * Math.sin(Math.toRadians(angleF)));
 
             System.out.println("angleF = " + angleF);
             System.out.println("sin = " + Math.sin(Math.toRadians(angleF)));
@@ -308,14 +312,22 @@ public class Login extends Application {
     private void setPos() {
         
         setRect();
-        rotate = new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2);
-        rectangle.getTransforms().add(rotate);
+
         lines[4].setStartX(rectangle.getX() + rectangle.getWidth() / 2);
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
         lines[4].setEndX(rectangle.getX() + rectangle.getWidth() / 2 + 40);
         lines[4].setEndY(rectangle.getY() + rectangle.getHeight() / 2);
-        checkRotateCollisions();
+        //checkRotateCollisions();
                     
+    }
+
+    private void rotateRect() {
+
+        rotate = new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2);
+        rectangle.getTransforms().add(rotate);
+        lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
+        System.out.println("check rotate");
+
     }
     
     private void changeRectPos(int dX, int dY) {
@@ -328,7 +340,7 @@ public class Login extends Application {
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
         lines[4].setEndX(lines[4].getEndX() + dX);
         lines[4].setEndY(lines[4].getEndY() + dY);
-        checkRotateCollisions();
+        //checkRotateCollisions();
     }
     
     private boolean checkValidData() {
@@ -376,9 +388,9 @@ public class Login extends Application {
                 return trig;
     }
     
-    private void checkRotateCollisions() {
+    /*private void checkRotateCollisions() {
         lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
-                /*for (int i = 0; i < 4; ++i) {
+                *//*for (int i = 0; i < 4; ++i) {
                     if (lines[i].intersects(lines[4].getBoundsInParent())) {
                         
                         System.out.println("check");
@@ -413,9 +425,9 @@ public class Login extends Application {
                         
                         }
                     }
-                }*/
+                }*//*
                 
-    }
+    }*/
     
 
     public static void main(String[] args) {
