@@ -42,6 +42,8 @@ public class Login extends Application {
     private Rectangle rectangle;
     private final Line[] lines = new Line[5];
     private Rotate rotate;
+    private RandomObject spawnObject = new RandomObject(cWidth);
+    private Rectangle spawnRectangle;
 
     @Override
     public void start(Stage primaryStage) {
@@ -77,6 +79,9 @@ public class Login extends Application {
 
         setRect();
         createLines();
+
+        if (spawnRectangle != null)
+            root.getChildren().add(spawnRectangle);
 
         root.getChildren().add(rectangle);
         for (Line line : lines) 
@@ -265,6 +270,32 @@ public class Login extends Application {
 
 
             moving(actiontarget2);
+            drawScene(grid);
+            //lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
+            rotateRect();
+
+        });
+
+        Button btn3 = new Button("Search");
+        HBox hbBtn3 = new HBox(10);
+        hbBtn3.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn3.getChildren().add(btn3);
+        grid.add(hbBtn3, 1, 13);
+
+        final Text actiontarget3 = new Text();
+        grid.add(actiontarget3, 0, 14);
+        GridPane.setColumnSpan(actiontarget3, 2);
+        GridPane.setHalignment(actiontarget3, RIGHT);
+        actiontarget3.setId("actiontarget3");
+
+
+        btn3.setOnAction(e -> {
+            actiontarget3.setFill(Color.FIREBRICK);
+
+            spawnRectangle = spawnObject.spawn();
+
+            actiontarget3.setText("Searching");
+
             drawScene(grid);
             //lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
             rotateRect();
