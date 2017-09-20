@@ -1,7 +1,4 @@
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import static javafx.geometry.HPos.RIGHT;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -11,14 +8,16 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
+
+import static javafx.geometry.HPos.RIGHT;
 
 public class Login extends Application {
     
@@ -39,11 +38,13 @@ public class Login extends Application {
     private int rWidth = 40;
     private int angleF = 0;
     
-    private Rectangle rectangle;
+    private Rectangle rectangle = new Rectangle();
     private final Line[] lines = new Line[5];
-    private Rotate rotate;
+    private Rotate rotate = new Rotate();
     private RandomObject spawnObject = new RandomObject(cWidth);
     private Rectangle spawnRectangle;
+    private Line searchingLine = new Line();
+
 
     @Override
     public void start(Stage primaryStage) {
@@ -68,6 +69,11 @@ public class Login extends Application {
         makeTextFields(grid);
         makeButtons(grid);
 
+        setRect();
+        rectangle.getTransforms().add(rotate);
+        createLines();
+        lines[4].getTransforms().add(rotate);
+
         
         drawScene(grid);
         
@@ -77,11 +83,11 @@ public class Login extends Application {
         
         Group root = new Group();
 
-        setRect();
-        createLines();
 
-        if (spawnRectangle != null)
+        if (spawnRectangle != null) {
             root.getChildren().add(spawnRectangle);
+            //root.getChildren().add(searchingLine);
+        }
 
         root.getChildren().add(rectangle);
         for (Line line : lines) 
@@ -96,15 +102,14 @@ public class Login extends Application {
     
     private void setRect() {
 
-        //CHANGED
-        rectangle = new Rectangle();
-
         rectangle.setX(beginX);
         rectangle.setY(beginY);
         rectangle.setWidth(2 * rWidth);
         rectangle.setHeight(rWidth);
         rectangle.setArcWidth(20);
         rectangle.setArcHeight(20);
+
+
     }
     
     private void createLines() {
@@ -126,7 +131,6 @@ public class Login extends Application {
         lines[2].setStartY(cWidth);
         lines[2].setEndX(cWidth);
         lines[2].setEndY(0);
-        //lines[2].setVisible(false);
         
         lines[3] = new Line();
         lines[3].setStartX(cWidth);
@@ -204,11 +208,12 @@ public class Login extends Application {
             actiontarget.setText("Processing");
             if (checkValidData()) {
                 actiontarget.setText("Processing");
-                //setPos();
                 //CHANGED
-                setPos();
-                drawScene(grid);
+                setRect();
+                setLinePos();
                 rotateRect();
+                if (spawnRectangle != null)
+                    checkSearchColissions();
 
             } else
                 actiontarget.setText("Try again");
@@ -233,19 +238,15 @@ public class Login extends Application {
             //CHANGED
             //angleF = Integer.valueOf(angle1Field.getText());
 
-            if (angleF < 0)
-                angleF += 360 + Integer.valueOf(angle1Field.getText());
-            else
-                angleF += Integer.valueOf(angle1Field.getText());
-
-            if (angleF >= 360)
-                angleF = angleF - (int) (angleF / 360) * 360;
+            setAngleF();
 
             System.out.println(angleF);
 
-            setPos();
-            drawScene(grid);
+            setLinePos();
+            //drawScene(grid);
             rotateRect();
+            if (spawnRectangle != null)
+                checkSearchColissions();
         });
         
         Button btn2 = new Button("Rotate");
@@ -269,10 +270,11 @@ public class Login extends Application {
             actiontarget2.setText("Processing");
 
 
+            resetRotateRect();
             moving(actiontarget2);
-            drawScene(grid);
-            //lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
             rotateRect();
+            if (spawnRectangle != null)
+                checkSearchColissions();
 
         });
 
@@ -293,14 +295,27 @@ public class Login extends Application {
             actiontarget3.setFill(Color.FIREBRICK);
 
             spawnRectangle = spawnObject.spawn();
+            drawScene(grid);
 
             actiontarget3.setText("Searching");
 
-            drawScene(grid);
-            //lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
-            rotateRect();
+            search();
+
+            //rotateRect();
 
         });
+    }
+
+    private void setAngleF() {
+
+        if (angleF < 0)
+            angleF += 360 + Integer.valueOf(angle1Field.getText());
+        else
+            angleF += Integer.valueOf(angle1Field.getText());
+
+        if (angleF >= 360)
+            angleF = angleF - (int) (angleF / 360) * 360;
+
     }
 
     private void moving(Text actiontarget) {
@@ -326,7 +341,7 @@ public class Login extends Application {
             beginX += dx;
             beginY += dy;
 
-            changeRectPos(dx, dy);
+            changeRobotPos(dx, dy);
 
             if (canMove(prevX , prevY))
 
@@ -340,13 +355,11 @@ public class Login extends Application {
 
     }
     
-    private void setPos() {
-        
-        setRect();
+    private void setLinePos() {
 
-        lines[4].setStartX(rectangle.getX() + rectangle.getWidth() / 2);
+        lines[4].setStartX(rectangle.getX()/* + rectangle.getWidth() / 2*/);
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
-        lines[4].setEndX(rectangle.getX() + rectangle.getWidth() / 2 + 40);
+        lines[4].setEndX(rectangle.getX() + rectangle.getWidth() / 2 + rectangle.getWidth() + 40);
         lines[4].setEndY(rectangle.getY() + rectangle.getHeight() / 2);
         //checkRotateCollisions();
                     
@@ -354,20 +367,23 @@ public class Login extends Application {
 
     private void rotateRect() {
 
-        rotate = new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2);
-        rectangle.getTransforms().add(rotate);
-        lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
-        System.out.println("check rotate");
+        rotate.setPivotX(rectangle.getX());
+        rotate.setPivotY(rectangle.getY() + rectangle.getHeight() / 2);
+        rotate.setAngle(angleF);
+
+        //System.out.println("check rotate");
 
     }
+
+    private void resetRotateRect() {
+        rotate.setPivotX(0);
+        rotate.setPivotY(0);
+        rotate.setAngle(0);
+    }
     
-    private void changeRectPos(int dX, int dY) {
+    private void changeRobotPos(int dX, int dY) {
         setRect();
-        //drawScene();
-        rotate = new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2);
-        rectangle.getTransforms().add(rotate);
-        //lines[4].getTransforms().add(rotate);
-        lines[4].setStartX(rectangle.getX() + rectangle.getWidth() / 2);
+        lines[4].setStartX(rectangle.getX());
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
         lines[4].setEndX(lines[4].getEndX() + dX);
         lines[4].setEndY(lines[4].getEndY() + dY);
@@ -411,13 +427,85 @@ public class Login extends Application {
                             beginX = prevX;
                             beginY = prevY;
                             
-                            changeRectPos(dX, dY);
+                            changeRobotPos(dX, dY);
                             trig = false;
                         }
                         
                         
                 return trig;
     }
+
+    public boolean search() {
+        boolean found = false;
+        int angle = Integer.valueOf(angle1Field.getText());
+
+        //createSearchingLine();
+
+        //for (int searchingAngle = 0; searchingAngle < 360; searchingAngle += Integer.valueOf(angle1Field.getText())) {
+
+            setAngleF();
+            rotateRect();
+            checkSearchColissions();
+
+            /*if (searchingLine.intersects(spawnRectangle.getLayoutBounds()) || rectangle.intersects(spawnRectangle.getLayoutBounds()) ) {
+
+
+                System.out.println("yep");
+                System.out.println(lines[4].getEndX());
+                System.out.println(lines[4].getEndY());
+                //System.out.println(lines[4].getRotate());
+                System.out.println(rectangle.getX());
+                System.out.println(rectangle.getY());
+            }*/
+
+            /*try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }*/
+
+
+        return found;
+
+    }
+
+    private void createSearchingLine() {
+        searchingLine.setVisible(true);
+
+        searchingLine.setStartX(rectangle.getX()/* + rectangle.getWidth() / 2*/);
+        searchingLine.setStartY(rectangle.getY() + rectangle.getHeight() / 2);
+        searchingLine.setEndX(rectangle.getX() + rectangle.getWidth() / 2 + rectangle.getWidth() + 40);
+        searchingLine.setEndY(rectangle.getY() + rectangle.getHeight() / 2);
+
+
+    }
+
+    private void rotate( int angle){
+
+        double ox , oy;
+        ox = rectangle.getX();
+        oy = rectangle.getY() + rectangle.getHeight() / 2;
+
+        searchingLine.setEndX(ox + (searchingLine.getEndX() - ox ) * Math.cos(Math.toRadians(angle))
+                + ( searchingLine.getEndY() - oy) * Math.sin(Math.toRadians(angle)) );
+
+        searchingLine.setEndY(oy + (-searchingLine.getEndX() + ox ) * Math.sin(Math.toRadians(angle))
+                + ( searchingLine.getEndY() - oy) * Math.cos(Math.toRadians(angle)));
+
+
+
+    }
+
+    private void checkSearchColissions() {
+
+        if (rectangle.intersects(spawnRectangle.getLayoutBounds()) || lines[4].intersects(spawnRectangle.getLayoutBounds()))
+            System.out.println("done");
+
+    }
+
+
     
     /*private void checkRotateCollisions() {
         lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
