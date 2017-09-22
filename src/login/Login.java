@@ -328,7 +328,7 @@ public class Login extends Application {
         grid.add(hbBtn4, 0, 11);
 
         btn4.setOnAction(e -> {
-            resetRotateRect();
+            setRotatePivot();
             rotate360();
 
             //rotateRect();
@@ -405,9 +405,13 @@ public class Login extends Application {
 
     }
 
-    private void resetRotateRect() {
+    private void setRotatePivot() {
         rotate.setPivotX(rectangle.getX());
         rotate.setPivotY(rectangle.getY() + rectangle.getHeight() / 2);
+    }
+
+    private void resetRotateRect() {
+        setRotatePivot();
         rotate.setAngle(0);
     }
     
@@ -474,8 +478,10 @@ public class Login extends Application {
         //for (int searchingAngle = 0; searchingAngle < 360; searchingAngle += Integer.valueOf(angle1Field.getText())) {
 
             setAngleF();
-            rotateRect();
-            checkSearchColissions();
+            setRotatePivot();
+            rotateAnimation();
+            //rotateRect();
+            //checkSearchColissions();
 
             /*if (searchingLine.intersects(spawnRectangle.getLayoutBounds()) || rectangle.intersects(spawnRectangle.getLayoutBounds()) ) {
 
@@ -553,7 +559,26 @@ public class Login extends Application {
                         )
                 );
 
-        //rotationAnimation.setCycleCount(Animation.INDEFINITE);
+        rotationAnimation.play();
+    }
+
+    private void rotateAnimation() {
+
+        final Timeline rotationAnimation = new Timeline();
+
+        rotationAnimation.setCycleCount(1);
+
+        rotationAnimation.getKeyFrames()
+                .add(
+                        new KeyFrame(
+                                Duration.millis(500),
+                                new KeyValue(
+                                        rotate.angleProperty(),
+                                        angleF
+                                )
+                        )
+                );
+
         rotationAnimation.play();
     }
 
