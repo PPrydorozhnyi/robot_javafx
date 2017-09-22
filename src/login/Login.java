@@ -1,3 +1,7 @@
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,6 +21,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import static javafx.geometry.HPos.RIGHT;
 
@@ -309,6 +314,23 @@ public class Login extends Application {
 
             search();
 
+            //resetRotateRect();
+            //rotate360();
+
+            //rotateRect();
+
+        });
+
+        Button btn4 = new Button("+-360");
+        HBox hbBtn4 = new HBox(10);
+        hbBtn4.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn4.getChildren().add(btn4);
+        grid.add(hbBtn4, 0, 11);
+
+        btn4.setOnAction(e -> {
+            resetRotateRect();
+            rotate360();
+
             //rotateRect();
 
         });
@@ -384,8 +406,8 @@ public class Login extends Application {
     }
 
     private void resetRotateRect() {
-        rotate.setPivotX(0);
-        rotate.setPivotY(0);
+        rotate.setPivotX(rectangle.getX());
+        rotate.setPivotY(rectangle.getY() + rectangle.getHeight() / 2);
         rotate.setAngle(0);
     }
     
@@ -425,8 +447,8 @@ public class Login extends Application {
         boolean trig = true;
                 for (int i = 0; i < 4; ++i)
                         while (lines[i].intersects(circle.getBoundsInParent())
-                                /*|| rectangle.getX() > cWidth || rectangle.getX() < 0
-                                || rectangle.getY() > cWidth || rectangle.getY() <0*/) {
+                                || circle.getCenterX() > cWidth || circle.getCenterX() < 0
+                                || circle.getCenterY() > cWidth || circle.getCenterY() <0) {
                             //dX = -rWidth;
                             //System.out.println(dX);
                             dX = prevX - beginX;
@@ -511,6 +533,28 @@ public class Login extends Application {
         if (rectangle.intersects(spawnRectangle.getLayoutBounds()) || lines[4].intersects(spawnRectangle.getLayoutBounds()))
             System.out.println("done");
 
+    }
+
+    private void rotate360() {
+
+        final Timeline rotationAnimation = new Timeline();
+
+        rotationAnimation.setCycleCount(2);
+        rotationAnimation.setAutoReverse(true);
+
+        rotationAnimation.getKeyFrames()
+                .add(
+                        new KeyFrame(
+                                Duration.seconds(5),
+                                new KeyValue(
+                                        rotate.angleProperty(),
+                                        360
+                                )
+                        )
+                );
+
+        //rotationAnimation.setCycleCount(Animation.INDEFINITE);
+        rotationAnimation.play();
     }
 
 
