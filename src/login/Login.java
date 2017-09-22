@@ -94,7 +94,7 @@ public class Login extends Application {
 
         if (spawnRectangle != null) {
             root.getChildren().add(spawnRectangle);
-            //root.getChildren().add(searchingLine);
+            root.getChildren().add(searchingLine);
         }
 
         root.getChildren().add(rectangle);
@@ -328,6 +328,7 @@ public class Login extends Application {
         grid.add(hbBtn4, 0, 11);
 
         btn4.setOnAction(e -> {
+
             setRotatePivot();
             rotate360();
 
@@ -473,15 +474,14 @@ public class Login extends Application {
         boolean found = false;
         int angle = Integer.valueOf(angle1Field.getText());
 
-        //createSearchingLine();
+        createSearchingLine();
 
         //for (int searchingAngle = 0; searchingAngle < 360; searchingAngle += Integer.valueOf(angle1Field.getText())) {
 
             setAngleF();
-            setRotatePivot();
-            rotateAnimation();
-            //rotateRect();
-            //checkSearchColissions();
+            //setRotatePivot();
+            //rotateAnimation();
+            rotate(angle);
 
             /*if (searchingLine.intersects(spawnRectangle.getLayoutBounds()) || rectangle.intersects(spawnRectangle.getLayoutBounds()) ) {
 
@@ -520,15 +520,13 @@ public class Login extends Application {
 
     private void rotate( int angle){
 
-        double ox , oy;
-        ox = rectangle.getX();
-        oy = rectangle.getY() + rectangle.getHeight() / 2;
+        double length = rectangle.getWidth() / 2 + rectangle.getWidth() + 40;
 
-        searchingLine.setEndX(ox + (searchingLine.getEndX() - ox ) * Math.cos(Math.toRadians(angle))
-                + ( searchingLine.getEndY() - oy) * Math.sin(Math.toRadians(angle)) );
+        //System.out.println(length * Math.cos(Math.toRadians(angle)));
 
-        searchingLine.setEndY(oy + (-searchingLine.getEndX() + ox ) * Math.sin(Math.toRadians(angle))
-                + ( searchingLine.getEndY() - oy) * Math.cos(Math.toRadians(angle)));
+        searchingLine.setEndX(searchingLine.getStartX() + length * Math.cos(Math.toRadians(angleF)) );
+
+        searchingLine.setEndY(searchingLine.getStartY() + length * Math.sin(Math.toRadians(angleF)) );
 
 
 
@@ -554,7 +552,7 @@ public class Login extends Application {
                                 Duration.seconds(5),
                                 new KeyValue(
                                         rotate.angleProperty(),
-                                        360
+                                        angleF + 360
                                 )
                         )
                 );
