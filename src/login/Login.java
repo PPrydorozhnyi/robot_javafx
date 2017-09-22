@@ -9,6 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -39,6 +40,7 @@ public class Login extends Application {
     private int angleF = 0;
     
     private Rectangle rectangle = new Rectangle();
+    private Circle circle = new Circle();
     private final Line[] lines = new Line[5];
     private Rotate rotate = new Rotate();
     private RandomObject spawnObject = new RandomObject(cWidth);
@@ -70,6 +72,7 @@ public class Login extends Application {
         makeButtons(grid);
 
         setRect();
+        circle.setFill(Color.BROWN);
         rectangle.getTransforms().add(rotate);
         createLines();
         lines[4].getTransforms().add(rotate);
@@ -90,6 +93,7 @@ public class Login extends Application {
         }
 
         root.getChildren().add(rectangle);
+        root.getChildren().add(circle);
         for (Line line : lines) 
             root.getChildren().add(line);
 
@@ -108,6 +112,10 @@ public class Login extends Application {
         rectangle.setHeight(rWidth);
         rectangle.setArcWidth(20);
         rectangle.setArcHeight(20);
+
+        circle.setCenterX(rectangle.getX());
+        circle.setCenterY(rectangle.getY() + rectangle.getHeight() / 2);
+        circle.setRadius(rWidth / 2);
 
 
     }
@@ -416,7 +424,7 @@ public class Login extends Application {
         int dY;
         boolean trig = true;
                 for (int i = 0; i < 4; ++i)
-                        while (lines[i].intersects(rectangle.getBoundsInParent()) 
+                        while (lines[i].intersects(circle.getBoundsInParent())
                                 /*|| rectangle.getX() > cWidth || rectangle.getX() < 0
                                 || rectangle.getY() > cWidth || rectangle.getY() <0*/) {
                             //dX = -rWidth;
