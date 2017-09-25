@@ -23,6 +23,8 @@ import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.Formatter;
+
 import static javafx.geometry.HPos.RIGHT;
 
 public class Login extends Application {
@@ -226,7 +228,7 @@ public class Login extends Application {
                 setLinePos();
                 rotateRect();
                 if (spawnRectangle != null)
-                    checkSearchColissions();
+                    checkSearchCollisions();
 
             } else
                 actiontarget.setText("Try again");
@@ -259,7 +261,7 @@ public class Login extends Application {
             //drawScene(grid);
             rotateRect();
             if (spawnRectangle != null)
-                checkSearchColissions();
+                checkSearchCollisions();
         });
         
         Button btn2 = new Button("Rotate");
@@ -287,7 +289,7 @@ public class Login extends Application {
             moving(actiontarget2);
             rotateRect();
             if (spawnRectangle != null)
-                checkSearchColissions();
+                checkSearchCollisions();
 
         });
 
@@ -307,17 +309,18 @@ public class Login extends Application {
         btn3.setOnAction(e -> {
             actiontarget3.setFill(Color.FIREBRICK);
 
-            spawnRectangle = spawnObject.spawn();
-            drawScene(grid);
+            if (spawnRectangle == null) {
+                spawnRectangle = spawnObject.spawn();
+                drawScene(grid);
+            }
 
             actiontarget3.setText("Searching");
 
-            search();
+            if (search())
+                actiontarget3.setText(String.format("x: %.2f, y: %.2f\n",searchingLine.getEndX(), searchingLine.getEndY()));
+            else
+                actiontarget3.setText("Not found");
 
-            //resetRotateRect();
-            //rotate360();
-
-            //rotateRect();
 
         });
 
@@ -333,6 +336,19 @@ public class Login extends Application {
             rotate360();
 
             //rotateRect();
+
+        });
+
+        Button btn5 = new Button("Spawn object");
+        HBox hbBtn5 = new HBox(10);
+        hbBtn5.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn5.getChildren().add(btn5);
+        grid.add(hbBtn5, 0, 13);
+
+        btn5.setOnAction(e -> {
+
+            spawnRectangle = spawnObject.spawn();
+            drawScene(grid);
 
         });
     }
@@ -471,39 +487,36 @@ public class Login extends Application {
     }
 
     public boolean search() {
-        boolean found = false;
-        int angle = Integer.valueOf(angle1Field.getText());
-
+        //boolean found = false;
+        //int angle = Integer.valueOf(angle1Field.getText());
         createSearchingLine();
 
-        //for (int searchingAngle = 0; searchingAngle < 360; searchingAngle += Integer.valueOf(angle1Field.getText())) {
+        int delta = Integer.valueOf(angle1Field.getText());
 
-            setAngleF();
-            //setRotatePivot();
-            //rotateAnimation();
-            rotate(angle);
+            for (int angle = angleF; angle <= 360 + angleF; angle += delta ) {
 
-            /*if (searchingLine.intersects(spawnRectangle.getLayoutBounds()) || rectangle.intersects(spawnRectangle.getLayoutBounds()) ) {
+                rotate(angle , rWidth);
 
+                for (int length = rWidth + 1;
+                     !searchingLine.intersects(lines[0].getLayoutBounds()) &&
+                        !searchingLine.intersects(lines[1].getLayoutBounds()) &&
+                        !searchingLine.intersects(lines[2].getLayoutBounds()) &&
+                        !searchingLine.intersects(lines[3].getLayoutBounds());
+                        length++) {
 
-                System.out.println("yep");
-                System.out.println(lines[4].getEndX());
-                System.out.println(lines[4].getEndY());
-                //System.out.println(lines[4].getRotate());
-                System.out.println(rectangle.getX());
-                System.out.println(rectangle.getY());
-            }*/
+                    rotate(angle , length);
 
-            /*try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                    if (spawnRectangle.contains(searchingLine.getEndX(), searchingLine.getEndY())) {
+                        return true;
+                    }
+
+                }
+                //System.out.println(counter);
+
             }
 
-        }*/
 
-
-        return found;
+        return false;
 
     }
 
@@ -518,23 +531,23 @@ public class Login extends Application {
 
     }
 
-    private void rotate( int angle){
+    private void rotate( int angle, double length){
 
-        double length = rectangle.getWidth() / 2 + rectangle.getWidth() + 40;
+        //double length = rectangle.getWidth() / 2 + rectangle.getWidth() + 40;
 
         //System.out.println(length * Math.cos(Math.toRadians(angle)));
 
-        searchingLine.setEndX(searchingLine.getStartX() + length * Math.cos(Math.toRadians(angleF)) );
+        searchingLine.setEndX(searchingLine.getStartX() + length * Math.cos(Math.toRadians(angle)) );
 
-        searchingLine.setEndY(searchingLine.getStartY() + length * Math.sin(Math.toRadians(angleF)) );
+        searchingLine.setEndY(searchingLine.getStartY() + length * Math.sin(Math.toRadians(angle)) );
 
-
+       // System.out.println("rotateM");
 
     }
 
-    private void checkSearchColissions() {
+    private void checkSearchCollisions() {
 
-        if (rectangle.intersects(spawnRectangle.getLayoutBounds()) || lines[4].intersects(spawnRectangle.getLayoutBounds()))
+        if (circle.intersects(spawnRectangle.getLayoutBounds()) || searchingLine.intersects(spawnRectangle.getLayoutBounds()))
             System.out.println("done");
 
     }
