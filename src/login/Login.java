@@ -39,10 +39,10 @@ public class Login extends Application {
     private TextField angleField;
     private TextField angle1Field;
     
-    private int beginX = 200;
-    private int beginY = 200;
+    private double beginX = 200;
+    private double beginY = 200;
     private int stLength = 0;
-    private int rWidth = 40;
+    private int rWidth = 20;
     private int angleF = 0;
     
     private Rectangle rectangle = new Rectangle();
@@ -55,6 +55,9 @@ public class Login extends Application {
     private Line searchingLine = new Line();
 
     private FindRoute findRoute;
+    private Button searchBtn;
+    private Circle circleA = new Circle();
+    private Circle circleB = new Circle();
 
 
     @Override
@@ -105,6 +108,8 @@ public class Login extends Application {
         root.getChildren().add(background);
         root.getChildren().add(rectangle);
         root.getChildren().add(circle);
+        root.getChildren().add(circleA);
+        root.getChildren().add(circleB);
         for (Line line : lines) 
             root.getChildren().add(line);
 
@@ -122,8 +127,10 @@ public class Login extends Application {
         background.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (findRoute != null)
+                if (findRoute != null) {
                     findRoute.setPoints(event);
+                    searchBtn.fire();
+                }
             }});
     }
     
@@ -383,22 +390,39 @@ public class Login extends Application {
         });
 
         Button btn7 = new Button("Find route");
+        searchBtn = btn7;
         HBox hbBtn7 = new HBox(10);
         hbBtn7.setAlignment(Pos.BOTTOM_RIGHT);
         hbBtn7.getChildren().add(btn7);
         grid.add(hbBtn7, 1, 15);
 
         final Text actiontarget7 = new Text();
-        grid.add(actiontarget7, 0, 16);
+        grid.add(actiontarget7, 1, 16);
         GridPane.setColumnSpan(actiontarget, 2);
         GridPane.setHalignment(actiontarget, RIGHT);
         actiontarget7.setId("actiontarget7");
+        actiontarget7.setFill(Color.FIREBRICK);
 
         btn7.setOnAction(e -> {
 
-            findRoute = FindRoute.getInstance();
+            if (findRoute == null)
+                findRoute = FindRoute.getInstance();
+
+            if (! findRoute.pointConfirmedA() ){
+                actiontarget7.setText("Click on point A");
+            } else if (! findRoute.pointConfirmedB() ){
+                actiontarget7.setText("Click on point B");
+            } else {
+                actiontarget7.setText("Routing\n" +
+                        "Ax: " + findRoute.getAx() + " Ay: " + findRoute.getAy()
+                        + "\nBx: " + findRoute.getBx() + " By: " + findRoute.getBy());
+                setCircles();
+                setRectPos(findRoute.getAx(), findRoute.getAy());
+                findRoute.resetPoints();
+            }
 
         });
+
     }
 
     private void setAngleF() {
@@ -417,8 +441,8 @@ public class Login extends Application {
 
         int dx;
         int dy;
-        int prevX = beginX;
-        int prevY = beginY;
+        double prevX = beginX;
+        double prevY = beginY;
 
         while (stLength-- > 0) {
 
@@ -480,7 +504,7 @@ public class Login extends Application {
         rotate.setAngle(0);
     }
     
-    private void changeRobotPos(int dX, int dY) {
+    private void changeRobotPos(double dX, double dY) {
         setRect();
         lines[4].setStartX(rectangle.getX());
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
@@ -510,9 +534,9 @@ public class Login extends Application {
         return true;
         }
     
-    private boolean canMove(int prevX, int prevY) {
-        int dX;
-        int dY;
+    private boolean canMove(double prevX, double prevY) {
+        double dX;
+        double dY;
         boolean trig = true;
                 for (int i = 0; i < 4; ++i)
                         while (lines[i].intersects(circle.getBoundsInParent())
@@ -633,6 +657,37 @@ public class Login extends Application {
                 );
 
         rotationAnimation.play();
+    }
+
+    public void setRectPos(double beginX, double beginY) {
+        this.beginX = beginX;
+        this.beginY = beginY - rWidth / 2;
+
+        resetRotateRect();
+
+        setRect();
+
+        lines[4].setStartX(rectangle.getX()/* + rectangle.getWidth() / 2*/);
+        lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
+        lines[4].setEndX(rectangle.getX() + rectangle.getWidth() / 2 + rectangle.getWidth() + 40);
+        lines[4].setEndY(rectangle.getY() + rectangle.getHeight() / 2);
+
+        rotateRect();
+
+    }
+
+    // set points A and B like circles
+    private void setCircles() {
+        circleA.setCenterX(findRoute.getAx());
+        circleA.setCenterY(findRoute.getAy());
+        circleA.setRadius(5);
+        circleA.setFill(Color.BLUE);
+
+        circleB.setCenterX(findRoute.getBx());
+        circleB.setCenterY(findRoute.getBy());
+
+        circleB.setRadius(5);
+        circleB.setFill(Color.RED);
     }
     
 

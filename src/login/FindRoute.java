@@ -3,6 +3,7 @@ import javafx.scene.input.MouseEvent;
 public class FindRoute {
 
     private static FindRoute findRoute;
+    private Login login;
 
     private double Ax;
     private double Ay;
@@ -10,9 +11,10 @@ public class FindRoute {
     private double By;
 
     private int pointsCounter;
+    private boolean pointConfirmedA;
+    private boolean pointConfirmedB;
 
     private FindRoute() {
-
 
 
     }
@@ -27,16 +29,19 @@ public class FindRoute {
     }
 
     public void setPoints(MouseEvent e) {
+
         ++pointsCounter;
 
-        if (pointsCounter >=2)  pointsCounter %= 2 ;
+        if (pointsCounter >= 2) pointsCounter %= 2;
 
-        if ( pointsCounter == 1) {
+        if (pointsCounter == 1) {
             Ax = e.getSceneX();
             Ay = e.getSceneY();
+            pointConfirmedA = true;
         } else {
             Bx = e.getSceneX();
             By = e.getSceneY();
+            pointConfirmedB = true;
         }
 
         System.out.println("Ax: " + Ax + " Ay: " + Ay);
@@ -60,7 +65,21 @@ public class FindRoute {
         return By;
     }
 
+
     public int getPointsCounter() {
         return pointsCounter;
+    }
+
+    public boolean pointConfirmedA() {
+        return pointConfirmedA;
+    }
+
+    public boolean pointConfirmedB() {
+        return pointConfirmedB;
+    }
+
+    public void resetPoints() {
+        pointConfirmedA = false;
+        pointConfirmedB = false;
     }
 }
