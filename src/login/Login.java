@@ -1,8 +1,8 @@
-import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
@@ -23,15 +24,13 @@ import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.util.Formatter;
-
 import static javafx.geometry.HPos.RIGHT;
 
 public class Login extends Application {
     
     private Stage primaryS;
     
-    private int cWidth = 500;
+    private int cWidth = 800;
     
     private TextField beginCoordX;
     private TextField beginCoordY;
@@ -47,12 +46,15 @@ public class Login extends Application {
     private int angleF = 0;
     
     private Rectangle rectangle = new Rectangle();
+    private Rectangle background = new Rectangle(cWidth, cWidth);
     private Circle circle = new Circle();
     private final Line[] lines = new Line[5];
     private Rotate rotate = new Rotate();
     private RandomObject spawnObject = new RandomObject(cWidth);
     private Rectangle spawnRectangle;
     private Line searchingLine = new Line();
+
+    private FindRoute findRoute;
 
 
     @Override
@@ -61,8 +63,8 @@ public class Login extends Application {
         primaryS = primaryStage;
         
         primaryStage.setTitle("lab 1");
-        primaryStage.setHeight(600);
-        primaryStage.setWidth(900);
+        primaryStage.setHeight(850);
+        primaryStage.setWidth(1200);
         primaryStage.setResizable(false);
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.TOP_RIGHT);
@@ -78,6 +80,7 @@ public class Login extends Application {
         makeTextFields(grid);
         makeButtons(grid);
 
+        setBackground();
         setRect();
         circle.setFill(Color.BROWN);
         rectangle.getTransforms().add(rotate);
@@ -99,6 +102,7 @@ public class Login extends Application {
             root.getChildren().add(searchingLine);
         }
 
+        root.getChildren().add(background);
         root.getChildren().add(rectangle);
         root.getChildren().add(circle);
         for (Line line : lines) 
@@ -109,6 +113,18 @@ public class Login extends Application {
         primaryS.setScene(new Scene(hBox, 800, 600));
         primaryS.show();
         
+    }
+
+    private void setBackground() {
+
+        background.setFill(Color.WHITE);
+
+        background.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (findRoute != null)
+                    findRoute.setPoints(event);
+            }});
     }
     
     private void setRect() {
@@ -351,6 +367,38 @@ public class Login extends Application {
             drawScene(grid);
 
         });
+
+        Button btn6 = new Button("Change width");
+        HBox hbBtn6 = new HBox(10);
+        hbBtn6.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn6.getChildren().add(btn6);
+        grid.add(hbBtn6, 0, 9);
+
+        btn6.setOnAction(e -> {
+
+            rWidth = Integer.valueOf(robWidth.getText());
+            setRect();
+            setLinePos();
+
+        });
+
+        Button btn7 = new Button("Find route");
+        HBox hbBtn7 = new HBox(10);
+        hbBtn7.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn7.getChildren().add(btn7);
+        grid.add(hbBtn7, 1, 15);
+
+        final Text actiontarget7 = new Text();
+        grid.add(actiontarget7, 0, 16);
+        GridPane.setColumnSpan(actiontarget, 2);
+        GridPane.setHalignment(actiontarget, RIGHT);
+        actiontarget7.setId("actiontarget7");
+
+        btn7.setOnAction(e -> {
+
+            findRoute = FindRoute.getInstance();
+
+        });
     }
 
     private void setAngleF() {
@@ -533,15 +581,9 @@ public class Login extends Application {
 
     private void rotate( int angle, double length){
 
-        //double length = rectangle.getWidth() / 2 + rectangle.getWidth() + 40;
-
-        //System.out.println(length * Math.cos(Math.toRadians(angle)));
-
         searchingLine.setEndX(searchingLine.getStartX() + length * Math.cos(Math.toRadians(angle)) );
 
         searchingLine.setEndY(searchingLine.getStartY() + length * Math.sin(Math.toRadians(angle)) );
-
-       // System.out.println("rotateM");
 
     }
 
@@ -592,49 +634,6 @@ public class Login extends Application {
 
         rotationAnimation.play();
     }
-
-
-    
-    /*private void checkRotateCollisions() {
-        lines[4].getTransforms().add(new Rotate(angleF,rectangle.getX() + rectangle.getWidth() / 2,rectangle.getY() + rectangle.getHeight() / 2));
-                *//*for (int i = 0; i < 4; ++i) {
-                    if (lines[i].intersects(lines[4].getBoundsInParent())) {
-                        
-                        System.out.println("check");
-                        
-                        switch (i) {
-                            case 0:    
-                            lines[4].setEndX(0);
-                            System.out.println("check0");
-                            lines[4].setEndY(0);
-                                break;
-                        
-                            case 1:
-                                lines[4].setEndX(0);
-                            //System.out.println("check0");
-                            lines[4].setEndY(0);
-                                System.out.println("check1");
-                                break;
-                                
-                            case 2:
-                                lines[4].setEndX(0);
-                            //System.out.println("check0");
-                            lines[4].setEndY(0);
-                                System.out.println("check2");
-                                break;
-                            case 3:
-                                lines[4].setEndX(0);
-                            //System.out.println("check0");
-                            lines[4].setEndY(0);
-                                System.out.println("check3");
-                                System.out.println(lines[4].getEndY());
-                                break;
-                        
-                        }
-                    }
-                }*//*
-                
-    }*/
     
 
     public static void main(String[] args) {
