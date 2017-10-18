@@ -25,6 +25,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import static javafx.geometry.HPos.RIGHT;
+import static java.lang.Math.*;
 
 public class Login extends Application {
     
@@ -43,7 +44,7 @@ public class Login extends Application {
     private double beginY = 200;
     private int stLength = 0;
     private int rWidth = 20;
-    private int angleF = 0;
+    private double angleF = 0;
     
     private Rectangle rectangle = new Rectangle();
     private Rectangle background = new Rectangle(cWidth, cWidth);
@@ -99,13 +100,14 @@ public class Login extends Application {
         
         Group root = new Group();
 
+        root.getChildren().add(background);
 
         if (spawnRectangle != null) {
+            System.out.println("wtf");
             root.getChildren().add(spawnRectangle);
             root.getChildren().add(searchingLine);
         }
 
-        root.getChildren().add(background);
         root.getChildren().add(rectangle);
         root.getChildren().add(circle);
         root.getChildren().add(circleA);
@@ -416,10 +418,21 @@ public class Login extends Application {
                 actiontarget7.setText("Routing\n" +
                         "Ax: " + findRoute.getAx() + " Ay: " + findRoute.getAy()
                         + "\nBx: " + findRoute.getBx() + " By: " + findRoute.getBy());
-                setCircles();
-                setRectPos(findRoute.getAx(), findRoute.getAy());
-                findRoute.resetPoints();
+                goToPoint();
             }
+
+        });
+
+        Button btn8 = new Button("Reset search line");
+        HBox hbBtn8 = new HBox(10);
+        hbBtn8.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn8.getChildren().add(btn8);
+        grid.add(hbBtn8, 0, 15);
+
+        btn8.setOnAction(e -> {
+
+            spawnRectangle = null;
+            drawScene(grid);
 
         });
 
@@ -448,12 +461,12 @@ public class Login extends Application {
 
             //System.out.println(stLength);
 
-            dx = (int)(rectangle.getWidth() * Math.cos(Math.toRadians(angleF)));
-            dy = (int)(rectangle.getWidth() * Math.sin(Math.toRadians(angleF)));
+            dx = (int)(rectangle.getWidth() * cos(toRadians(angleF)));
+            dy = (int)(rectangle.getWidth() * sin(toRadians(angleF)));
 
             System.out.println("angleF = " + angleF);
-            System.out.println("sin = " + Math.sin(Math.toRadians(angleF)));
-            System.out.println("cos = " + Math.cos(Math.toRadians(angleF)));
+            System.out.println("sin = " + sin(toRadians(angleF)));
+            System.out.println("cos = " + cos(toRadians(angleF)));
             System.out.println("dx = " + dx);
             System.out.println("dy = " + dy);
 
@@ -565,7 +578,7 @@ public class Login extends Application {
 
         int delta = Integer.valueOf(angle1Field.getText());
 
-            for (int angle = angleF; angle <= 360 + angleF; angle += delta ) {
+            for (int angle = (int)angleF; angle <= 360 + (int)angleF; angle += delta ) {
 
                 rotate(angle , rWidth);
 
@@ -605,9 +618,9 @@ public class Login extends Application {
 
     private void rotate( int angle, double length){
 
-        searchingLine.setEndX(searchingLine.getStartX() + length * Math.cos(Math.toRadians(angle)) );
+        searchingLine.setEndX(searchingLine.getStartX() + length * cos(toRadians(angle)) );
 
-        searchingLine.setEndY(searchingLine.getStartY() + length * Math.sin(Math.toRadians(angle)) );
+        searchingLine.setEndY(searchingLine.getStartY() + length * sin(toRadians(angle)) );
 
     }
 
@@ -688,6 +701,14 @@ public class Login extends Application {
 
         circleB.setRadius(5);
         circleB.setFill(Color.RED);
+    }
+
+    public void goToPoint() {
+        setCircles();
+        findRoute.resetPoints();
+        setRectPos(findRoute.getAx(), findRoute.getAy());
+        angleF = findRoute.countAngle();
+        rotateRect();
     }
     
 

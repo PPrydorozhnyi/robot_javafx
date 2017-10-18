@@ -1,4 +1,5 @@
 import javafx.scene.input.MouseEvent;
+import static java.lang.Math.*;
 
 public class FindRoute {
 
@@ -81,5 +82,18 @@ public class FindRoute {
     public void resetPoints() {
         pointConfirmedA = false;
         pointConfirmedB = false;
+    }
+
+    public double countAngle() {
+
+        double angle = 0;
+
+        angle = toDegrees(atan((By - Ay) / (Bx - Ax)));
+
+        if (Bx < Ax) {
+            angle += 180;
+        }
+
+        return angle;
     }
 }
