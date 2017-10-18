@@ -2,6 +2,8 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,6 +32,8 @@ import static java.lang.Math.*;
 public class Login extends Application {
     
     private Stage primaryS;
+
+    Group root;
     
     private int cWidth = 800;
     
@@ -59,6 +63,7 @@ public class Login extends Application {
     private Button searchBtn;
     private Circle circleA = new Circle();
     private Circle circleB = new Circle();
+    private Button btn2;
 
 
     @Override
@@ -98,7 +103,7 @@ public class Login extends Application {
     
     private void drawScene(GridPane grid) {
         
-        Group root = new Group();
+        root = new Group();
 
         root.getChildren().add(background);
 
@@ -289,7 +294,7 @@ public class Login extends Application {
                 checkSearchCollisions();
         });
         
-        Button btn2 = new Button("Rotate");
+        btn2 = new Button("Rotate");
         HBox hbBtn2 = new HBox(10);
         hbBtn2.setAlignment(Pos.BOTTOM_RIGHT);
         hbBtn2.getChildren().add(btn2);
@@ -418,7 +423,7 @@ public class Login extends Application {
                 actiontarget7.setText("Routing\n" +
                         "Ax: " + findRoute.getAx() + " Ay: " + findRoute.getAy()
                         + "\nBx: " + findRoute.getBx() + " By: " + findRoute.getBy());
-                goToPoint();
+                goToPoint(actiontarget7);
             }
 
         });
@@ -452,8 +457,8 @@ public class Login extends Application {
 
     private void moving(Text actiontarget) {
 
-        int dx;
-        int dy;
+        double dx;
+        double dy;
         double prevX = beginX;
         double prevY = beginY;
 
@@ -461,8 +466,8 @@ public class Login extends Application {
 
             //System.out.println(stLength);
 
-            dx = (int)(rectangle.getWidth() * cos(toRadians(angleF)));
-            dy = (int)(rectangle.getWidth() * sin(toRadians(angleF)));
+            dx = rectangle.getWidth() * cos(toRadians(angleF));
+            dy = rectangle.getWidth() * sin(toRadians(angleF));
 
             System.out.println("angleF = " + angleF);
             System.out.println("sin = " + sin(toRadians(angleF)));
@@ -703,12 +708,60 @@ public class Login extends Application {
         circleB.setFill(Color.RED);
     }
 
-    public void goToPoint() {
+    public void goToPoint(final Text actiontarget) {
         setCircles();
         findRoute.resetPoints();
         setRectPos(findRoute.getAx(), findRoute.getAy());
         angleF = findRoute.countAngle();
         rotateRect();
+
+        Task<Void> tsk = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                //int counter = 3;
+                while (!( circle.contains(circleB.getCenterX(), circleB.getCenterY()) ||
+                        circle.intersects(circleB.getBoundsInParent()) )) {
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    Platform.runLater(new Runnable() {
+                        @Override public void run() {
+                            Rectangle trace = new Rectangle();
+                            Rotate rotate = new Rotate();
+                            rotate.setAngle(angleF);
+                            rotate.setPivotX(rectangle.getX());
+                            rotate.setPivotY(rectangle.getY() + rectangle.getHeight() / 2);
+
+                            trace.setX(beginX);
+                            trace.setY(beginY);
+                            trace.setWidth(2 * rWidth);
+                            trace.setHeight(rWidth);
+                            trace.setArcWidth(20);
+                            trace.setArcHeight(20);
+
+                            trace.setFill(Color.YELLOW);
+                            trace.getTransforms().add(rotate);
+
+                            root.getChildren().add(trace);
+                        }
+                    });
+                    stLength = 1;
+                    resetRotateRect();
+                    moving(actiontarget);
+                    rotateRect();
+                    //btn2.fire();
+                    //System.out.println(counter);
+                }
+                return null;
+            }
+        };
+
+        new Thread(tsk).start();
+
     }
     
 
