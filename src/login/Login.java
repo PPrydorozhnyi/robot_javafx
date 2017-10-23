@@ -52,15 +52,17 @@ public class Login extends Application {
     
     private Rectangle rectangle = new Rectangle();
     private Rectangle background = new Rectangle(cWidth, cWidth);
-    private Circle circle = new Circle();
+    Circle circle = new Circle();
     private final Line[] lines = new Line[5];
     private Rotate rotate = new Rotate();
     private RandomObject spawnObject = new RandomObject(cWidth);
     private Rectangle spawnRectangle;
     private Line searchingLine = new Line();
+    private Line robotLine;
 
     private FindRoute findRoute;
     private Button searchBtn;
+    private Button obstacleBtn;
     private Circle circleA = new Circle();
     private Circle circleB = new Circle();
     private Button btn2;
@@ -131,14 +133,10 @@ public class Login extends Application {
 
         background.setFill(Color.WHITE);
 
-        background.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (findRoute != null) {
-                    findRoute.setPoints(event);
-                    searchBtn.fire();
-                }
-            }});
+    }
+
+    private void resetBackground() {
+        background.setOnMouseClicked(null);
     }
     
     private void setRect() {
@@ -184,6 +182,7 @@ public class Login extends Application {
         lines[3].setEndY(0);
 
         lines[4] = new Line();
+        robotLine = lines[4];
         lines[4].setStartX(rectangle.getX()/* + rectangle.getWidth() / 2*/);
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
         lines[4].setEndX(rectangle.getX() + rectangle.getWidth() / 2 + rectangle.getWidth() + 40);
@@ -396,7 +395,7 @@ public class Login extends Application {
 
         });
 
-        Button btn7 = new Button("Find route");
+        Button btn7 = new Button("Choose points");
         searchBtn = btn7;
         HBox hbBtn7 = new HBox(10);
         hbBtn7.setAlignment(Pos.BOTTOM_RIGHT);
@@ -413,7 +412,16 @@ public class Login extends Application {
         btn7.setOnAction(e -> {
 
             if (findRoute == null)
-                findRoute = FindRoute.getInstance();
+                findRoute = FindRoute.getInstance(this);
+
+            background.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent event) {
+                    if (findRoute != null) {
+                        findRoute.setPoints(event, false);
+                        searchBtn.fire();
+                    }
+                }});
 
             if (! findRoute.pointConfirmedA() ){
                 actiontarget7.setText("Click on point A");
@@ -423,7 +431,11 @@ public class Login extends Application {
                 actiontarget7.setText("Routing\n" +
                         "Ax: " + findRoute.getAx() + " Ay: " + findRoute.getAy()
                         + "\nBx: " + findRoute.getBx() + " By: " + findRoute.getBy());
-                goToPoint(actiontarget7);
+                //goToPoint(actiontarget7);
+                setCircles();
+                findRoute.resetPoints();
+
+                resetBackground();
             }
 
         });
@@ -438,6 +450,34 @@ public class Login extends Application {
 
             spawnRectangle = null;
             drawScene(grid);
+
+        });
+
+        Button btn9 = new Button("Go");
+        HBox hbBtn9 = new HBox(10);
+        hbBtn9.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn9.getChildren().add(btn9);
+        grid.add(hbBtn9, 0, 16);
+
+        btn9.setOnAction(e -> {
+
+            goToPoint(actiontarget7);
+
+        });
+
+        Button btn10 = new Button("Make obstacle");
+        obstacleBtn = btn10;
+        HBox hbBtn10 = new HBox(10);
+        hbBtn10.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn10.getChildren().add(btn10);
+        grid.add(hbBtn10, 0, 17);
+
+        btn10.setOnAction(e -> {
+
+            if (findRoute == null)
+                findRoute = FindRoute.getInstance(this);
+
+            makeObstacle();
 
         });
 
@@ -556,24 +596,28 @@ public class Login extends Application {
         double dX;
         double dY;
         boolean trig = true;
-                for (int i = 0; i < 4; ++i)
-                        while (lines[i].intersects(circle.getBoundsInParent())
-                                || circle.getCenterX() > cWidth || circle.getCenterX() < 0
-                                || circle.getCenterY() > cWidth || circle.getCenterY() <0) {
-                            //dX = -rWidth;
-                            //System.out.println(dX);
-                            dX = prevX - beginX;
-                            dY = prevY - beginY;
+        for (int i = 0; i < 4; ++i) {
+            if (lines[i].intersects(circle.getBoundsInParent())
+                    || circle.getCenterX() > cWidth || circle.getCenterX() < 0
+                    || circle.getCenterY() > cWidth || circle.getCenterY() < 0) {
+                //dX = -rWidth;
+                //System.out.println(dX);
+                trig = false;
+            }
+        }
 
-                            beginX = prevX;
-                            beginY = prevY;
-                            
-                            changeRobotPos(dX, dY);
-                            trig = false;
-                        }
+        if (!trig) {
+            dX = prevX - beginX;
+            dY = prevY - beginY;
+
+            beginX = prevX;
+            beginY = prevY;
+
+            changeRobotPos(dX, dY);
+        }
                         
                         
-                return trig;
+        return trig;
     }
 
     public boolean search() {
@@ -709,8 +753,8 @@ public class Login extends Application {
     }
 
     public void goToPoint(final Text actiontarget) {
-        setCircles();
-        findRoute.resetPoints();
+        //setCircles();
+        //findRoute.resetPoints();
         setRectPos(findRoute.getAx(), findRoute.getAy());
         angleF = findRoute.countAngle();
         rotateRect();
@@ -747,6 +791,7 @@ public class Login extends Application {
                             trace.getTransforms().add(rotate);
 
                             root.getChildren().add(trace);
+                            toFront();
                         }
                     });
                     stLength = 1;
@@ -761,6 +806,27 @@ public class Login extends Application {
         };
 
         new Thread(tsk).start();
+
+    }
+
+    public void toFront() {
+        rectangle.toFront();
+        circle.toFront();
+        robotLine.toFront();
+        circleA.toFront();
+        circleB.toFront();
+    }
+
+    private void makeObstacle() {
+
+        background.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (findRoute != null) {
+                    findRoute.setPoints(event, true);
+                    obstacleBtn.fire();
+                }
+            }});
 
     }
     

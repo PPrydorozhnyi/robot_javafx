@@ -1,4 +1,8 @@
 import javafx.scene.input.MouseEvent;
+import javafx.scene.shape.Line;
+
+import java.util.ArrayList;
+
 import static java.lang.Math.*;
 
 public class FindRoute {
@@ -15,21 +19,23 @@ public class FindRoute {
     private boolean pointConfirmedA;
     private boolean pointConfirmedB;
 
-    private FindRoute() {
+    ArrayList<Line> lines = new ArrayList<>();
+    Line instance;
 
-
+    private FindRoute(Login login) {
+        this.login = login;
     }
 
-    public static FindRoute getInstance() {
+    public static FindRoute getInstance(Login login) {
 
         if (findRoute == null)
-            findRoute = new FindRoute();
+            findRoute = new FindRoute(login);
 
         return findRoute;
 
     }
 
-    public void setPoints(MouseEvent e) {
+    public void setPoints(MouseEvent e, boolean trig) {
 
         ++pointsCounter;
 
@@ -43,12 +49,37 @@ public class FindRoute {
             Bx = e.getSceneX();
             By = e.getSceneY();
             pointConfirmedB = true;
+
+            if (trig) {
+                createLine();
+                System.out.println("wtf");
+            }
+
         }
 
         System.out.println("Ax: " + Ax + " Ay: " + Ay);
         System.out.println("Bx: " + Bx + " By: " + By);
 
+
     }
+
+    private void createLine() {
+
+        instance = new Line(Ax, Ay, Bx, By);
+
+        lines.add(instance);
+
+        if (login == null)
+            System.out.println("kurwa");
+        if (login.root == null)
+            System.out.println("how");
+        login.root.getChildren().add(instance);
+
+        resetPoints();
+        login.toFront();
+
+    }
+
 
     public double getAx() {
         return Ax;
