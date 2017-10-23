@@ -18,6 +18,7 @@ public class FindRoute {
     private int pointsCounter;
     private boolean pointConfirmedA;
     private boolean pointConfirmedB;
+    private boolean collision;
 
     ArrayList<Line> lines = new ArrayList<>();
     Line instance;
@@ -69,15 +70,28 @@ public class FindRoute {
 
         lines.add(instance);
 
-        if (login == null)
-            System.out.println("kurwa");
-        if (login.root == null)
-            System.out.println("how");
         login.root.getChildren().add(instance);
 
         resetPoints();
         login.toFront();
 
+    }
+
+    public boolean checkCollisions() {
+
+        for (Line line : lines) {
+            collision = line.intersects(login.circle.getBoundsInLocal());
+
+            if (collision) {
+                //System.out.println(login.circle.getCenterX() + " " + login.circle.getCenterY());
+                System.out.println(lines.size());
+                System.out.println(line.getStartX() + " " + line.getEndX());
+                System.out.println(line.getStartY() + " " + line.getEndY());
+                break;
+            }
+        }
+
+        return !collision;
     }
 
 

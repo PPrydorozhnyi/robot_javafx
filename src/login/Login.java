@@ -50,7 +50,7 @@ public class Login extends Application {
     private int rWidth = 20;
     private double angleF = 0;
     
-    private Rectangle rectangle = new Rectangle();
+     Rectangle rectangle = new Rectangle();
     private Rectangle background = new Rectangle(cWidth, cWidth);
     Circle circle = new Circle();
     private final Line[] lines = new Line[5];
@@ -509,11 +509,11 @@ public class Login extends Application {
             dx = rectangle.getWidth() * cos(toRadians(angleF));
             dy = rectangle.getWidth() * sin(toRadians(angleF));
 
-            System.out.println("angleF = " + angleF);
-            System.out.println("sin = " + sin(toRadians(angleF)));
-            System.out.println("cos = " + cos(toRadians(angleF)));
-            System.out.println("dx = " + dx);
-            System.out.println("dy = " + dy);
+//            System.out.println("angleF = " + angleF);
+//            System.out.println("sin = " + sin(toRadians(angleF)));
+//            System.out.println("cos = " + cos(toRadians(angleF)));
+//            System.out.println("dx = " + dx);
+//            System.out.println("dy = " + dy);
 
             beginX += dx;
             beginY += dy;
@@ -604,6 +604,11 @@ public class Login extends Application {
                 //System.out.println(dX);
                 trig = false;
             }
+        }
+
+        if (findRoute != null) {
+            System.out.println(trig + " " + findRoute.checkCollisions());
+            trig = trig && findRoute.checkCollisions();
         }
 
         if (!trig) {
@@ -805,7 +810,9 @@ public class Login extends Application {
             }
         };
 
-        new Thread(tsk).start();
+        Thread temp = new Thread(tsk);
+        temp.setDaemon(true);
+        temp.start();
 
     }
 
