@@ -19,12 +19,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import sun.security.util.Debug;
 
 import static javafx.geometry.HPos.RIGHT;
 import static java.lang.Math.*;
@@ -44,11 +46,11 @@ public class Login extends Application {
     private TextField angleField;
     private TextField angle1Field;
     
-    private double beginX = 200;
-    private double beginY = 200;
-    private int stLength = 0;
-    private int rWidth = 20;
-    private double angleF = 0;
+    double beginX = 200;
+    double beginY = 200;
+    int stLength = 0;
+    int rWidth = 20;
+    double angleF = 0;
     
      Rectangle rectangle = new Rectangle();
     private Rectangle background = new Rectangle(cWidth, cWidth);
@@ -63,9 +65,13 @@ public class Login extends Application {
     private FindRoute findRoute;
     private Button searchBtn;
     private Button obstacleBtn;
-    private Circle circleA = new Circle();
-    private Circle circleB = new Circle();
+    Circle circleA = new Circle();
+    Circle circleB = new Circle();
     private Button btn2;
+
+//    private double middleX;
+//    private double middleY;
+
 
 
     @Override
@@ -110,10 +116,13 @@ public class Login extends Application {
         root.getChildren().add(background);
 
         if (spawnRectangle != null) {
-            System.out.println("wtf");
+            //System.out.println("wtf");
             root.getChildren().add(spawnRectangle);
-            root.getChildren().add(searchingLine);
+            //root.getChildren().add(searchingLine);
         }
+
+        root.getChildren().add(searchingLine);
+        searchingLine.setVisible(false);
 
         root.getChildren().add(rectangle);
         root.getChildren().add(circle);
@@ -461,8 +470,20 @@ public class Login extends Application {
 
         btn9.setOnAction(e -> {
 
-            goToPoint(actiontarget7);
+            Task<Void> tsk = new Task<Void>() {
 
+                @Override
+                protected Void call() throws Exception {
+                    setRectPos(findRoute.getAx(), findRoute.getAy());
+                    while(!findRoute.goToPoint(actiontarget7));
+                    actiontarget7.setText("Completed!");
+                    return null;
+                }
+            };
+
+            Thread tmp = new Thread(tsk);
+            tmp.setDaemon(true);
+            tmp.start();
         });
 
         Button btn10 = new Button("Make obstacle");
@@ -495,7 +516,7 @@ public class Login extends Application {
 
     }
 
-    private void moving(Text actiontarget) {
+     void moving(Text actiontarget) {
 
         double dx;
         double dy;
@@ -542,7 +563,7 @@ public class Login extends Application {
                     
     }
 
-    private void rotateRect() {
+    void rotateRect() {
 
         rotate.setPivotX(rectangle.getX());
         rotate.setPivotY(rectangle.getY() + rectangle.getHeight() / 2);
@@ -557,12 +578,12 @@ public class Login extends Application {
         rotate.setPivotY(rectangle.getY() + rectangle.getHeight() / 2);
     }
 
-    private void resetRotateRect() {
+     void resetRotateRect() {
         setRotatePivot();
         rotate.setAngle(0);
     }
     
-    private void changeRobotPos(double dX, double dY) {
+    void changeRobotPos(double dX, double dY) {
         setRect();
         lines[4].setStartX(rectangle.getX());
         lines[4].setStartY(rectangle.getY() + rectangle.getHeight() / 2);
@@ -592,7 +613,7 @@ public class Login extends Application {
         return true;
         }
     
-    private boolean canMove(double prevX, double prevY) {
+    boolean canMove(double prevX, double prevY) {
         double dX;
         double dY;
         boolean trig = true;
@@ -607,8 +628,8 @@ public class Login extends Application {
         }
 
         if (findRoute != null) {
-            System.out.println(trig + " " + findRoute.checkCollisions());
-            trig = trig && findRoute.checkCollisions();
+            //System.out.println(trig + " " + findRoute.checkCollisions());
+            trig = trig && findRoute.checkCollisions(circle);
         }
 
         if (!trig) {
@@ -625,14 +646,15 @@ public class Login extends Application {
         return trig;
     }
 
-    public boolean search() {
+    private boolean search() {
         //boolean found = false;
         //int angle = Integer.valueOf(angle1Field.getText());
         createSearchingLine();
 
-        int delta = Integer.valueOf(angle1Field.getText());
+        System.out.println("in search");
+        int delta = 1;
 
-            for (int angle = (int)angleF; angle <= 360 + (int)angleF; angle += delta ) {
+            for (int angle = (int)angleF + 1; angle <= 360 + (int)angleF; angle += delta ) {
 
                 rotate(angle , rWidth);
 
@@ -649,6 +671,16 @@ public class Login extends Application {
                         return true;
                     }
 
+                    if (findRoute != null)
+                    for (Line line: findRoute.lines) {
+                        if (findRoute.intersection(line, searchingLine) ) {
+                            findRoute.setCollisionBx(searchingLine.getEndX());
+                            findRoute.setCollisionBy(searchingLine.getEndY());
+                            System.out.println(findRoute.lines.size());
+                            System.out.println("break in search");
+                            return true;
+                        }
+                    }
                 }
                 //System.out.println(counter);
 
@@ -658,6 +690,121 @@ public class Login extends Application {
         return false;
 
     }
+
+    // if from A to B exists obstacle
+   /* private boolean checkObstacleOnRoute(final Text actiontarget) {
+        createSearchingLine();
+        searchingLine.setEndX(findRoute.getBx());
+        searchingLine.setEndY(findRoute.getBy());
+
+        // if intersects with obstacles
+        if (!findRoute.checkCollisions(searchingLine)) {
+
+            System.out.println("found obstacle");
+
+            if (!searchBorders()) {
+                actiontarget.setText("Obstacles everywhere");
+                System.out.println("Obstacles everywhere");
+                return false;
+            } else {
+
+                System.out.println(angleF);
+                search();
+                System.out.println("CAx: " +
+                        findRoute.getCollisionAx() +
+                        " CAy: " + findRoute.getCollisionAy() +
+                        " CBx: " + findRoute.getCollisionBx()
+                        + " CBy: " + findRoute.getCollisionBy());
+
+
+                if (countLength(findRoute.getCollisionAx(), findRoute.getCollisionAy(),
+                        findRoute.getCollisionBx(), findRoute.getCollisionBy()) > rWidth) {
+                    middleX = (findRoute.getCollisionAx() + findRoute.getCollisionBx()) / 2;
+                    middleY = (findRoute.getCollisionAy() + findRoute.getCollisionBy()) / 2;
+                    System.out.println("set middle point");
+                }
+            }
+            System.out.println("watta hell");
+        } else {
+            middleX = findRoute.getBx();
+            middleY = findRoute.getBy();
+        }
+
+        return true;
+    }*/
+
+    // counting length between two points
+    private double countLength(double Ax, double Ay, double Bx, double By) {
+
+        double length = 0;
+
+        length = sqrt ( pow((Bx - Ax), 2) + pow((By - Ay), 2) );
+
+        return length;
+
+    }
+
+
+    /*//TODO: make lines ractangles for contains
+    private boolean searchBorders() {
+        createSearchingLine();
+        searchingLine.setVisible(true);
+
+        boolean reachEndOfScreen = false;
+
+        int delta = 1;
+
+        for (int angle = (int)angleF; angle <= 360 + (int)angleF; angle += delta ) {
+
+            System.out.println("in loop searchborders");
+            rotate(angle , rWidth);
+
+            outer:
+            for (int length = rWidth + 1; ;
+                 length++) {
+
+                rotate(angle , length);
+
+                // if searching line intersects with obstacle
+                for (Line line: findRoute.lines) {
+                    if (findRoute.intersection(line, searchingLine) ) {
+                        System.out.println("correct");
+                        findRoute.setCollisionAx(searchingLine.getEndX());
+                        findRoute.setCollisionAy(searchingLine.getEndY());
+                        angleF = angle;
+                        break outer;
+                    }
+                }
+
+
+                if (!searchingLine.intersects(lines[0].getBoundsInLocal()) &&
+                        !searchingLine.intersects(lines[1].getBoundsInLocal()) &&
+                        !searchingLine.intersects(lines[2].getBoundsInLocal()) &&
+                        !searchingLine.intersects(lines[3].getBoundsInLocal())) {
+                    System.out.println("wuuut");
+                    reachEndOfScreen = true;
+                    break ;
+                }
+
+
+
+            }
+
+            // end of obstacle
+            if (reachEndOfScreen) {
+                System.out.println(searchingLine.getStartX() + " " + searchingLine.getStartY());
+                System.out.println(circle.getCenterX() + " " + circle.getCenterY());
+                System.out.println(searchingLine.getEndX() + " " + searchingLine.getEndY());
+                return true;
+            }
+
+
+        }
+
+
+        //mean obstacles everywhere
+        return false;
+    }*/
 
     private void createSearchingLine() {
         searchingLine.setVisible(true);
@@ -726,7 +873,7 @@ public class Login extends Application {
         rotationAnimation.play();
     }
 
-    public void setRectPos(double beginX, double beginY) {
+    private void setRectPos(double beginX, double beginY) {
         this.beginX = beginX;
         this.beginY = beginY - rWidth / 2;
 
@@ -757,66 +904,74 @@ public class Login extends Application {
         circleB.setFill(Color.RED);
     }
 
-    public void goToPoint(final Text actiontarget) {
-        //setCircles();
-        //findRoute.resetPoints();
-        setRectPos(findRoute.getAx(), findRoute.getAy());
-        angleF = findRoute.countAngle();
-        rotateRect();
+//    private boolean goToPoint(final Text actiontarget) {
+//        //setCircles();
+//        //findRoute.resetPoints();
+//
+//
+//        angleF = findRoute.countAngle();
+//        rotateRect();
+//        /*if (!checkObstacleOnRoute(actiontarget)) {
+//            return false;
+//        }*/
+//
+//        Task<Void> tsk = new Task<Void>() {
+//            @Override
+//            protected Void call() throws Exception {
+//                //int counter = 3;
+//                while (!circle.intersects(circleB.getBoundsInParent()) ) {
+//
+//                    try {
+//                        Thread.sleep(1000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                    stLength = 1;
+//                    resetRotateRect();
+//                    moving(actiontarget);
+//                    rotateRect();
+//
+//                    Platform.runLater(new Runnable() {
+//                        @Override public void run() {
+//                            Rectangle trace = new Rectangle();
+//                            Rotate rotate = new Rotate();
+//                            rotate.setAngle(angleF);
+//                            rotate.setPivotX(rectangle.getX());
+//                            rotate.setPivotY(rectangle.getY() + rectangle.getHeight() / 2);
+//
+//                            trace.setX(beginX);
+//                            trace.setY(beginY);
+//                            trace.setWidth(2 * rWidth);
+//                            trace.setHeight(rWidth);
+//                            trace.setArcWidth(20);
+//                            trace.setArcHeight(20);
+//
+//                            trace.setFill(Color.YELLOW);
+//                            trace.getTransforms().add(rotate);
+//
+//                            root.getChildren().add(trace);
+//                            toFront();
+//                        }
+//                    });
+//                    //btn2.fire();
+//                    //System.out.println(counter);
+//                }
+//                going = false;
+//                return null;
+//            }
+//        };
+//
+//        Thread temp = new Thread(tsk);
+//        temp.setDaemon(true);
+//        temp.start();
+//
+//        while (going);
+//
+//        return circle.intersects(circleB.getBoundsInLocal());
+//    }
 
-        Task<Void> tsk = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                //int counter = 3;
-                while (!( circle.contains(circleB.getCenterX(), circleB.getCenterY()) ||
-                        circle.intersects(circleB.getBoundsInParent()) )) {
-
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    Platform.runLater(new Runnable() {
-                        @Override public void run() {
-                            Rectangle trace = new Rectangle();
-                            Rotate rotate = new Rotate();
-                            rotate.setAngle(angleF);
-                            rotate.setPivotX(rectangle.getX());
-                            rotate.setPivotY(rectangle.getY() + rectangle.getHeight() / 2);
-
-                            trace.setX(beginX);
-                            trace.setY(beginY);
-                            trace.setWidth(2 * rWidth);
-                            trace.setHeight(rWidth);
-                            trace.setArcWidth(20);
-                            trace.setArcHeight(20);
-
-                            trace.setFill(Color.YELLOW);
-                            trace.getTransforms().add(rotate);
-
-                            root.getChildren().add(trace);
-                            toFront();
-                        }
-                    });
-                    stLength = 1;
-                    resetRotateRect();
-                    moving(actiontarget);
-                    rotateRect();
-                    //btn2.fire();
-                    //System.out.println(counter);
-                }
-                return null;
-            }
-        };
-
-        Thread temp = new Thread(tsk);
-        temp.setDaemon(true);
-        temp.start();
-
-    }
-
-    public void toFront() {
+    void toFront() {
         rectangle.toFront();
         circle.toFront();
         robotLine.toFront();
