@@ -9,6 +9,7 @@ import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ public class FindRoute {
     private static FindRoute findRoute;
     private Login login;
     private final Logger logger;
+    LinkedList<Rectangle> traces = new LinkedList<>();
 
     private double Ax;
     private double Ay;
@@ -45,6 +47,8 @@ public class FindRoute {
     private Rectangle trace;
     private Rotate rotate;
     private double rectangleWidth;
+    private double rectangleHeight;
+    private double circleWidth;
 
     private boolean forward;
     private boolean back;
@@ -52,10 +56,13 @@ public class FindRoute {
     private boolean left;
     private boolean first = true;
     private int caseM;
+    private int counterLeft;
 
     private FindRoute(Login login) {
         this.login = login;
         rectangleWidth = login.rectangle.getWidth();
+        rectangleHeight = login.rectangle.getHeight();
+        circleWidth = 2 * login.circle.getRadius();
         logger =  LoggerFactory.getLogger(this.getClass());
     }
 
@@ -109,20 +116,20 @@ public class FindRoute {
         login.root.getChildren().add(instance);
 
         resetPoints();
-        login.toFront();
+        toFront();
 
     }
 
     boolean checkCollisions(Shape shape) {
 
         for (Line line : lines) {
-            collision = intersection(shape, line);
+            collision = intersection(shape, line) || line.intersects(shape.getBoundsInLocal());
 
             if (collision) {
                 //System.out.println(login.circle.getCenterX() + " " + login.circle.getCenterY());
-                System.out.println(lines.size());
-                System.out.println(line.getStartX() + " " + line.getEndX());
-                System.out.println(line.getStartY() + " " + line.getEndY());
+//                System.out.println(lines.size());
+//                System.out.println(line.getStartX() + " " + line.getEndX());
+//                System.out.println(line.getStartY() + " " + line.getEndY());
                 break;
             }
         }
@@ -210,13 +217,14 @@ public class FindRoute {
         pointConfirmedB = false;
     }
 
-    public double countAngle() {
+    private double countAngle() {
 
         double angle = 0;
 
-        angle = toDegrees(atan((By - Ay) / (Bx - Ax)));
+        angle = toDegrees(atan((By - login.circle.getCenterY()) /
+                (Bx - login.circle.getCenterX())));
 
-        if (Bx < Ax) {
+        if ( (Bx < login.circle.getCenterX())/* && (By > login.circle.getCenterY())*/ ) {
             angle += 180;
         }
 
@@ -227,7 +235,10 @@ public class FindRoute {
 
         if (first) {
 
-            if (!moving(actiontarget)) {
+            login.angleF = findRoute.countAngle();
+            login.rotateRect();
+            logger.debug("in first case");
+            if (!moving(actiontarget, Direction.DEFAULT)) {
                 first = false;
                 caseM = 1;
             }
@@ -236,16 +247,16 @@ public class FindRoute {
 
             switch (caseM) {
                 case 1:
-                    forward();
+                    forward(actiontarget);
                     break;
                 case 2:
-                    right();
+                    right(actiontarget);
                     break;
                 case 3:
-                    back();
+                    back(actiontarget);
                     break;
                 case 4:
-                    left();
+                    left(actiontarget);
                     break;
                 default:
                     assert false : "watta hell in strategy";
@@ -255,33 +266,123 @@ public class FindRoute {
 
     }
 
-    private void forward() {
+    private void forward(Text actiontarget) {
         logger.debug("forward method");
+        boolean trigger;
+
+        trigger = moving(actiontarget, Direction.FORWARD);
+
+        if (!trigger)
+            trigger = moving(actiontarget, Direction.RIGHT);
+
+        logger.debug(String.valueOf(trigger));
+
+        if (trigger)
+            first = true;
+        else
+            caseM = 2;
     }
 
-    private void right() {
+    private void right(Text actiontarget) {
         logger.debug("right method");
+        boolean trigger;
+        boolean triggerRight = false;
+
+        trigger = moving(actiontarget, Direction.BACK);
+        //logger.debug(String.valueOf(trigger));
+
+        if (trigger)
+            triggerRight = moving(actiontarget, Direction.RIGHT);
+
+        if (!trigger) {
+            caseM = 3;
+            return;
+        }
+
+        if (triggerRight)
+            first = true;
     }
 
-    private void back() {
+    private void back(Text actiontarget) {
         logger.debug("back method");
+        boolean trigger;
+        boolean triggerBack = false;
+
+        trigger = moving(actiontarget, Direction.LEFT);
+
+        if (!trigger)
+            triggerBack = moving(actiontarget, Direction.BACK);
+
+        if (!triggerBack && trigger) {
+            return;
+        }
+
+        if (trigger)
+            first = true;
+        else
+            caseM = 4;
     }
 
-    private void left() {
+    private void left(Text actiontarget) {
         logger.debug("left method");
+        boolean trigger;
+        boolean triggerForward = false;
+
+        trigger = moving(actiontarget, Direction.LEFT);
+
+        if (!trigger)
+            triggerForward = moving(actiontarget, Direction.FORWARD);
+
+        if (triggerForward)
+            return;
+        if (!trigger && !triggerForward)
+            first = true;
     }
 
-    private boolean moving(Text actiontarget) {
+    private boolean moving(Text actiontarget, Direction direction) {
 
-        double dx;
-        double dy;
+        double dx = 0;
+        double dy = 0;
         double prevX = login.beginX;
         double prevY = login.beginY;
         boolean trigger;
 
 
-        dx = rectangleWidth * cos(toRadians(login.angleF));
-        dy = rectangleWidth * sin(toRadians(login.angleF));
+        switch (direction) {
+            case FORWARD:
+
+                dx = circleWidth;
+                dy = 0;
+
+                break;
+            case BACK:
+
+                dx = -circleWidth;
+                dy = 0;
+
+                break;
+            case RIGHT:
+
+                dx = 0;
+                dy = rectangleHeight;
+
+                break;
+            case LEFT:
+
+                dx = 0;
+                dy = -rectangleHeight;
+
+                break;
+            case DEFAULT:
+
+                //logger.debug("Default case");
+                dx = circleWidth * cos(toRadians(login.angleF));
+                dy = circleWidth * sin(toRadians(login.angleF));
+
+                break;
+            default:
+                assert false : "moving default";
+        }
 
 //            System.out.println("angleF = " + angleF);
 //            System.out.println("sin = " + sin(toRadians(angleF)));
@@ -303,12 +404,10 @@ public class FindRoute {
             actiontarget.setText("Can`t move");
         }
 
+        System.out.println(login.circle.getCenterX());
+        System.out.println(login.circle.getCenterY());
+
         return trigger;
-    }
-
-    // N-S-W-E 4 directions
-    private void move4(int forward, int back, int right, int left) {
-
     }
 
     boolean goToPoint(final Text actiontarget) {
@@ -319,13 +418,13 @@ public class FindRoute {
             protected Void call() throws Exception {
                 BasicConfigurator.configure();
                 //int counter = 3;
-                while (!login.rectangle.intersects(login.circleB.getBoundsInParent())) {
-
-                    login.angleF = findRoute.countAngle();
-                    login.rotateRect();
+                while (!(login.rectangle.intersects(login.circleB.getBoundsInLocal())
+                        || intersection(login.rectangle, login.circleB)
+                        || findRoute.intersection(login.circleB, login.circle) ||
+                        login.circle.intersects(login.circleB.getBoundsInLocal()))) {
 
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -353,8 +452,9 @@ public class FindRoute {
                             trace.setFill(Color.YELLOW);
                             trace.getTransforms().add(rotate);
 
+                            traces.add(trace);
                             login.root.getChildren().add(trace);
-                            login.toFront();
+                            toFront();
                         }
                     });
                     //btn2.fire();
@@ -372,5 +472,35 @@ public class FindRoute {
         while (going) ;
 
         return login.circle.intersects(login.circleB.getBoundsInLocal());
+    }
+
+    private boolean intersectsWithTrace() {
+        for (Rectangle rect : traces) {
+            collision = intersection(login.rectangle, rect) ||
+                    rect.intersects(login.rectangle.getBoundsInLocal());
+
+            if (collision) {
+                //System.out.println(login.circle.getCenterX() + " " + login.circle.getCenterY());
+//                System.out.println(lines.size());
+//                System.out.println(line.getStartX() + " " + line.getEndX());
+//                System.out.println(line.getStartY() + " " + line.getEndY());
+                break;
+            }
+        }
+
+        return collision;
+    }
+
+    void toFront() {
+
+        for (Line line : lines)
+            line.toFront();
+
+        login.rectangle.toFront();
+        login.circle.toFront();
+        login.robotLine.toFront();
+        login.circleA.toFront();
+        login.circleB.toFront();
+
     }
 }

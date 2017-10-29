@@ -60,7 +60,7 @@ public class Login extends Application {
     private RandomObject spawnObject = new RandomObject(cWidth);
     private Rectangle spawnRectangle;
     private Line searchingLine = new Line();
-    private Line robotLine;
+    Line robotLine;
 
     private FindRoute findRoute;
     private Button searchBtn;
@@ -618,9 +618,10 @@ public class Login extends Application {
         double dY;
         boolean trig = true;
         for (int i = 0; i < 4; ++i) {
-            if (lines[i].intersects(circle.getBoundsInParent())
-                    || circle.getCenterX() > cWidth || circle.getCenterX() < 0
-                    || circle.getCenterY() > cWidth || circle.getCenterY() < 0) {
+            if (findRoute.intersection(lines[i], rectangle) ||
+                    lines[i].intersects(rectangle.getBoundsInLocal())
+                    || findRoute.intersection(lines[i], circle) ||
+                    lines[i].intersects(circle.getBoundsInLocal()) ) {
                 //dX = -rWidth;
                 //System.out.println(dX);
                 trig = false;
@@ -629,7 +630,8 @@ public class Login extends Application {
 
         if (findRoute != null) {
             //System.out.println(trig + " " + findRoute.checkCollisions());
-            trig = trig && findRoute.checkCollisions(circle);
+            trig = trig &&
+                    ( findRoute.checkCollisions(circle) ||  findRoute.checkCollisions(rectangle));
         }
 
         if (!trig) {
@@ -970,14 +972,6 @@ public class Login extends Application {
 //
 //        return circle.intersects(circleB.getBoundsInLocal());
 //    }
-
-    void toFront() {
-        rectangle.toFront();
-        circle.toFront();
-        robotLine.toFront();
-        circleA.toFront();
-        circleB.toFront();
-    }
 
     private void makeObstacle() {
 
