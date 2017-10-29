@@ -10,12 +10,17 @@ import javafx.scene.transform.Rotate;
 
 import java.util.ArrayList;
 
+import org.apache.log4j.BasicConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static java.lang.Math.*;
 
 public class FindRoute {
 
     private static FindRoute findRoute;
     private Login login;
+    private final Logger logger;
 
     private double Ax;
     private double Ay;
@@ -41,11 +46,17 @@ public class FindRoute {
     private Rotate rotate;
     private double rectangleWidth;
 
+    private boolean forward;
+    private boolean back;
+    private boolean right;
+    private boolean left;
+    private boolean first = true;
+    private int caseM;
 
     private FindRoute(Login login) {
         this.login = login;
         rectangleWidth = login.rectangle.getWidth();
-
+        logger =  LoggerFactory.getLogger(this.getClass());
     }
 
     public static FindRoute getInstance(Login login) {
@@ -119,7 +130,7 @@ public class FindRoute {
         return !collision;
     }
 
-    public boolean intersection(Shape shape1, Shape shape2) {
+    boolean intersection(Shape shape1, Shape shape2) {
 
         boolean collisionDetected = false;
 
@@ -212,16 +223,61 @@ public class FindRoute {
         return angle;
     }
 
-    private void strategy() {
+    private void strategy(Text actiontarget) {
+
+        if (first) {
+
+            if (!moving(actiontarget)) {
+                first = false;
+                caseM = 1;
+            }
+
+        } else {
+
+            switch (caseM) {
+                case 1:
+                    forward();
+                    break;
+                case 2:
+                    right();
+                    break;
+                case 3:
+                    back();
+                    break;
+                case 4:
+                    left();
+                    break;
+                default:
+                    assert false : "watta hell in strategy";
+            }
+
+        }
 
     }
 
-    void moving(Text actiontarget) {
+    private void forward() {
+        logger.debug("forward method");
+    }
+
+    private void right() {
+        logger.debug("right method");
+    }
+
+    private void back() {
+        logger.debug("back method");
+    }
+
+    private void left() {
+        logger.debug("left method");
+    }
+
+    private boolean moving(Text actiontarget) {
 
         double dx;
         double dy;
         double prevX = login.beginX;
         double prevY = login.beginY;
+        boolean trigger;
 
 
         dx = rectangleWidth * cos(toRadians(login.angleF));
@@ -238,7 +294,8 @@ public class FindRoute {
 
         login.changeRobotPos(dx, dy);
 
-        if (login.canMove(prevX, prevY))
+        trigger = login.canMove(prevX, prevY);
+        if (trigger)
 
             actiontarget.setText("Moving");
 
@@ -246,7 +303,7 @@ public class FindRoute {
             actiontarget.setText("Can`t move");
         }
 
-
+        return trigger;
     }
 
     // N-S-W-E 4 directions
@@ -255,21 +312,17 @@ public class FindRoute {
     }
 
     boolean goToPoint(final Text actiontarget) {
-        //setCircles();
-        //findRoute.resetPoints();
 
-
-        login.angleF = findRoute.countAngle();
-        login.rotateRect();
-        /*if (!checkObstacleOnRoute(actiontarget)) {
-            return false;
-        }*/
 
         Task<Void> tsk = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
+                BasicConfigurator.configure();
                 //int counter = 3;
                 while (!login.rectangle.intersects(login.circleB.getBoundsInParent())) {
+
+                    login.angleF = findRoute.countAngle();
+                    login.rotateRect();
 
                     try {
                         Thread.sleep(1000);
@@ -278,7 +331,7 @@ public class FindRoute {
                     }
 
                     login.resetRotateRect();
-                    moving(actiontarget);
+                    strategy(actiontarget);
                     login.rotateRect();
 
                     Platform.runLater(new Runnable() {
