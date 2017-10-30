@@ -22,7 +22,7 @@ public class FindRoute {
     private static FindRoute findRoute;
     private Login login;
     private final Logger logger;
-    LinkedList<Rectangle> traces = new LinkedList<>();
+    private LinkedList<Rectangle> traces;
 
     private double Ax;
     private double Ay;
@@ -34,39 +34,33 @@ public class FindRoute {
     private boolean pointConfirmedB;
     private boolean collision;
 
-    ArrayList<Line> lines = new ArrayList<>();
-    Line instance;
+    private ArrayList<Line> lines = new ArrayList<>();
 
     private double collisionAx;
     private double collisionBx;
     private double collisionAy;
     private double collisionBy;
 
-    private Shape intersect;
-    boolean going = true;
+    private boolean going = true;
     private Rectangle trace;
     private Rotate rotate;
-    private double rectangleWidth;
+    //private double rectangleWidth;
     private double rectangleHeight;
     private double circleWidth;
 
-    private boolean forward;
-    private boolean back;
-    private boolean right;
-    private boolean left;
     private boolean first = true;
     private int caseM;
-    private int counterLeft;
 
     private FindRoute(Login login) {
         this.login = login;
-        rectangleWidth = login.rectangle.getWidth();
+        //rectangleWidth = login.rectangle.getWidth();
         rectangleHeight = login.rectangle.getHeight();
         circleWidth = 2 * login.circle.getRadius();
         logger =  LoggerFactory.getLogger(this.getClass());
+        traces = new LinkedList<>();
     }
 
-    public static FindRoute getInstance(Login login) {
+    static FindRoute getInstance(Login login) {
 
         if (findRoute == null)
             findRoute = new FindRoute(login);
@@ -75,7 +69,7 @@ public class FindRoute {
 
     }
 
-    public void setPoints(MouseEvent e, boolean trig) {
+    void setPoints(MouseEvent e, boolean trig) {
 
         ++pointsCounter;
 
@@ -105,7 +99,7 @@ public class FindRoute {
 
     private void createLine() {
 
-        instance = new Line(Ax, Ay, Bx, By);
+        Line instance = new Line(Ax, Ay, Bx, By);
         //instance.setStrokeDashOffset(0);
         //instance.stroke
         instance.setStrokeWidth(1);
@@ -141,7 +135,7 @@ public class FindRoute {
 
         boolean collisionDetected = false;
 
-        intersect = Shape.intersect(shape1, shape2);
+        Shape intersect = Shape.intersect(shape1, shape2);
         if (intersect.getBoundsInLocal().getWidth() != -1) {
             collisionDetected = true;
         }
@@ -150,76 +144,72 @@ public class FindRoute {
     }
 
 
-    public double getAx() {
+    double getAx() {
         return Ax;
     }
 
-    public double getAy() {
+    double getAy() {
         return Ay;
     }
 
-    public double getBx() {
+    double getBx() {
         return Bx;
     }
 
-    public double getBy() {
+    double getBy() {
         return By;
     }
 
 
-    public int getPointsCounter() {
-        return pointsCounter;
-    }
-
-    public boolean pointConfirmedA() {
+    boolean pointConfirmedA() {
         return pointConfirmedA;
     }
 
-    public boolean pointConfirmedB() {
+    boolean pointConfirmedB() {
         return pointConfirmedB;
     }
 
 
-    public double getCollisionAx() {
-        return collisionAx;
-    }
+//    public double getCollisionAx() {
+//        return collisionAx;
+//    }
+//
+//    public void setCollisionAx(double collisionAx) {
+//        this.collisionAx = collisionAx;
+//    }
+//
+//    public double getCollisionBx() {
+//        return collisionBx;
+//    }
+//
+//    public void setCollisionBx(double collisionBx) {
+//        this.collisionBx = collisionBx;
+//    }
+//
+//    public double getCollisionAy() {
+//        return collisionAy;
+//    }
+//
+//    public void setCollisionAy(double collisionAy) {
+//        this.collisionAy = collisionAy;
+//    }
+//
+//    public double getCollisionBy() {
+//        return collisionBy;
+//    }
+//
+//    public void setCollisionBy(double collisionBy) {
+//        this.collisionBy = collisionBy;
+//    }
 
-    public void setCollisionAx(double collisionAx) {
-        this.collisionAx = collisionAx;
-    }
-
-    public double getCollisionBx() {
-        return collisionBx;
-    }
-
-    public void setCollisionBx(double collisionBx) {
-        this.collisionBx = collisionBx;
-    }
-
-    public double getCollisionAy() {
-        return collisionAy;
-    }
-
-    public void setCollisionAy(double collisionAy) {
-        this.collisionAy = collisionAy;
-    }
-
-    public double getCollisionBy() {
-        return collisionBy;
-    }
-
-    public void setCollisionBy(double collisionBy) {
-        this.collisionBy = collisionBy;
-    }
-
-    public void resetPoints() {
+    void resetPoints() {
         pointConfirmedA = false;
         pointConfirmedB = false;
     }
 
     private double countAngle() {
 
-        double angle = 0;
+        double angle;
 
         angle = toDegrees(atan((By - login.circle.getCenterY()) /
                 (Bx - login.circle.getCenterX())));
@@ -339,7 +329,7 @@ public class FindRoute {
             first = true;
     }
 
-    private boolean moving(Text actiontarget, Direction direction) {
+    boolean moving(Text actiontarget, Direction direction) {
 
         double dx = 0;
         double dy = 0;
@@ -433,29 +423,26 @@ public class FindRoute {
                     strategy(actiontarget);
                     login.rotateRect();
 
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            trace = new Rectangle();
-                            rotate = new Rotate();
-                            rotate.setAngle(login.angleF);
-                            rotate.setPivotX(login.rectangle.getX());
-                            rotate.setPivotY(login.rectangle.getY() + login.rectangle.getHeight() / 2);
+                    Platform.runLater(() -> {
+                        trace = new Rectangle();
+                        rotate = new Rotate();
+                        rotate.setAngle(login.angleF);
+                        rotate.setPivotX(login.rectangle.getX());
+                        rotate.setPivotY(login.rectangle.getY() + login.rectangle.getHeight() / 2);
 
-                            trace.setX(login.beginX);
-                            trace.setY(login.beginY);
-                            trace.setWidth(2 * login.rWidth);
-                            trace.setHeight(login.rWidth);
-                            trace.setArcWidth(20);
-                            trace.setArcHeight(20);
+                        trace.setX(login.beginX);
+                        trace.setY(login.beginY);
+                        trace.setWidth(2 * login.rWidth);
+                        trace.setHeight(login.rWidth);
+                        trace.setArcWidth(20);
+                        trace.setArcHeight(20);
 
-                            trace.setFill(Color.YELLOW);
-                            trace.getTransforms().add(rotate);
+                        trace.setFill(Color.YELLOW);
+                        trace.getTransforms().add(rotate);
 
-                            traces.add(trace);
-                            login.root.getChildren().add(trace);
-                            toFront();
-                        }
+                        traces.add(trace);
+                        login.root.getChildren().add(trace);
+                        toFront();
                     });
                     //btn2.fire();
                     //System.out.println(counter);
@@ -474,24 +461,24 @@ public class FindRoute {
         return login.circle.intersects(login.circleB.getBoundsInLocal());
     }
 
-    private boolean intersectsWithTrace() {
-        for (Rectangle rect : traces) {
-            collision = intersection(login.rectangle, rect) ||
-                    rect.intersects(login.rectangle.getBoundsInLocal());
+//    private boolean intersectsWithTrace() {
+//        for (Rectangle rect : traces) {
+//            collision = intersection(login.rectangle, rect) ||
+//                    rect.intersects(login.rectangle.getBoundsInLocal());
+//
+//            if (collision) {
+//                //System.out.println(login.circle.getCenterX() + " " + login.circle.getCenterY());
+////                System.out.println(lines.size());
+////                System.out.println(line.getStartX() + " " + line.getEndX());
+////                System.out.println(line.getStartY() + " " + line.getEndY());
+//                break;
+//            }
+//        }
+//
+//        return collision;
+//    }
 
-            if (collision) {
-                //System.out.println(login.circle.getCenterX() + " " + login.circle.getCenterY());
-//                System.out.println(lines.size());
-//                System.out.println(line.getStartX() + " " + line.getEndX());
-//                System.out.println(line.getStartY() + " " + line.getEndY());
-                break;
-            }
-        }
-
-        return collision;
-    }
-
-    void toFront() {
+    private void toFront() {
 
         for (Line line : lines)
             line.toFront();
