@@ -51,7 +51,7 @@ public class Login extends Application {
     private Rectangle background = new Rectangle(cWidth, cWidth);
     Circle circle = new Circle();
     private final Line[] lines = new Line[5];
-    private Rotate rotate = new Rotate();
+    Rotate rotate = new Rotate();
     private RandomObject spawnObject = new RandomObject(cWidth);
     private Rectangle spawnRectangle;
     private Line searchingLine = new Line();

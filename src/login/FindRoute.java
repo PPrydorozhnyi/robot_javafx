@@ -2,27 +2,27 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-
 import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+
 import static java.lang.Math.*;
 
-public class FindRoute {
+class FindRoute {
 
     private static FindRoute findRoute;
     private Login login;
     private final Logger logger;
-    private LinkedList<Rectangle> traces;
+    //private LinkedList<Rectangle> traces;
 
     private double Ax;
     private double Ay;
@@ -42,7 +42,7 @@ public class FindRoute {
     private double collisionBy;
 
     private boolean going = true;
-    private Rectangle trace;
+    private Circle trace;
     private Rotate rotate;
     //private double rectangleWidth;
     private double rectangleHeight;
@@ -56,8 +56,8 @@ public class FindRoute {
         //rectangleWidth = login.rectangle.getWidth();
         rectangleHeight = login.rectangle.getHeight();
         circleWidth = 2 * login.circle.getRadius();
-        logger =  LoggerFactory.getLogger(this.getClass());
-        traces = new LinkedList<>();
+        logger = LoggerFactory.getLogger(this.getClass());
+        //traces = new LinkedList<>();
     }
 
     static FindRoute getInstance(Login login) {
@@ -214,7 +214,7 @@ public class FindRoute {
         angle = toDegrees(atan((By - login.circle.getCenterY()) /
                 (Bx - login.circle.getCenterX())));
 
-        if ( (Bx < login.circle.getCenterX())/* && (By > login.circle.getCenterY())*/ ) {
+        if ((Bx < login.circle.getCenterX())/* && (By > login.circle.getCenterY())*/) {
             angle += 180;
         }
 
@@ -262,13 +262,15 @@ public class FindRoute {
 
         trigger = moving(actiontarget, Direction.FORWARD);
 
-        if (!trigger)
+        if (!trigger) {
             trigger = moving(actiontarget, Direction.RIGHT);
+        }
 
         logger.debug(String.valueOf(trigger));
 
-        if (trigger)
+        if (trigger) {
             first = true;
+        }
         else
             caseM = 2;
     }
@@ -280,6 +282,11 @@ public class FindRoute {
 
         trigger = moving(actiontarget, Direction.BACK);
         //logger.debug(String.valueOf(trigger));
+        try {
+            Thread.sleep(400);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         if (trigger)
             triggerRight = moving(actiontarget, Direction.RIGHT);
@@ -341,24 +348,29 @@ public class FindRoute {
         switch (direction) {
             case FORWARD:
 
+                login.angleF = 0;
                 dx = circleWidth;
                 dy = 0;
 
                 break;
             case BACK:
 
+                login.rotate.setAngle(180);
+                System.out.println("login.angleF = " + login.angleF);
                 dx = -circleWidth;
                 dy = 0;
 
                 break;
             case RIGHT:
 
+                login.angleF = 90;
                 dx = 0;
                 dy = rectangleHeight;
 
                 break;
             case LEFT:
 
+                login.angleF = 270;
                 dx = 0;
                 dy = -rectangleHeight;
 
@@ -424,23 +436,20 @@ public class FindRoute {
                     login.rotateRect();
 
                     Platform.runLater(() -> {
-                        trace = new Rectangle();
+                        trace = new Circle();
                         rotate = new Rotate();
                         rotate.setAngle(login.angleF);
                         rotate.setPivotX(login.rectangle.getX());
                         rotate.setPivotY(login.rectangle.getY() + login.rectangle.getHeight() / 2);
 
-                        trace.setX(login.beginX);
-                        trace.setY(login.beginY);
-                        trace.setWidth(2 * login.rWidth);
-                        trace.setHeight(login.rWidth);
-                        trace.setArcWidth(20);
-                        trace.setArcHeight(20);
+                        trace.setCenterX(login.rectangle.getX());
+                        trace.setCenterY(login.rectangle.getY() + login.rectangle.getHeight() / 2);
+                        trace.setRadius(login.rWidth / 2);
 
                         trace.setFill(Color.YELLOW);
                         trace.getTransforms().add(rotate);
 
-                        traces.add(trace);
+                        //traces.add(trace);
                         login.root.getChildren().add(trace);
                         toFront();
                     });
