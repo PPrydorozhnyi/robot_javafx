@@ -16,6 +16,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -46,6 +47,7 @@ public class Login extends Application {
     private int stLength = 0;
     int rWidth = 20;
     double angleF = 0;
+    int searchAngle;
 
     Rectangle rectangle = new Rectangle();
     private Rectangle background = new Rectangle(cWidth, cWidth);
@@ -54,7 +56,7 @@ public class Login extends Application {
     Rotate rotate = new Rotate();
     private RandomObject spawnObject = new RandomObject(cWidth);
     private Rectangle spawnRectangle;
-    private Line searchingLine = new Line();
+    Line searchingLine = new Line();
     Line robotLine;
 
     private FindRoute findRoute;
@@ -62,6 +64,8 @@ public class Login extends Application {
     private Button obstacleBtn;
     Circle circleA = new Circle();
     Circle circleB = new Circle();
+
+    FindPosition findPosition;
 
     @Override
     public void start(Stage primaryStage) {
@@ -71,7 +75,7 @@ public class Login extends Application {
         primaryStage.setTitle("lab");
         primaryStage.setHeight(850);
         primaryStage.setWidth(1200);
-        primaryStage.setResizable(false);
+        primaryStage.setResizable(true);
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.TOP_RIGHT);
         grid.setHgap(10);
@@ -347,7 +351,7 @@ public class Login extends Application {
 
             actiontarget3.setText("Searching");
 
-            if (search())
+            if (search(spawnRectangle, Integer.valueOf(angle1Field.getText())))
                 actiontarget3.setText(String.format("x: %.2f, y: %.2f\n", searchingLine.getEndX(), searchingLine.getEndY()));
             else
                 actiontarget3.setText("Not found");
@@ -493,6 +497,111 @@ public class Login extends Application {
 
         });
 
+        Button btn11 = new Button("GoC");
+        HBox hbBtn11 = new HBox(10);
+        hbBtn11.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn11.getChildren().add(btn11);
+        grid.add(hbBtn11, 0, 18);
+
+        btn11.setOnAction(e -> {
+
+            Task<Void> tsk = new Task<Void>() {
+
+                @Override
+                protected Void call() throws Exception {
+                    findRoute.curve = true;
+                    setRectPos(findRoute.getAx(), findRoute.getAy());
+                    while (!findRoute.goToPoint(actiontarget7)) ;
+                    actiontarget7.setText("Completed!");
+                    return null;
+                }
+            };
+
+            Thread tmp = new Thread(tsk);
+            tmp.setDaemon(true);
+            tmp.start();
+        });
+
+        Button btn12 = new Button("Object pos");
+        HBox hbBtn12 = new HBox(10);
+        hbBtn12.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn12.getChildren().add(btn12);
+        grid.add(hbBtn12, 0, 19);
+
+        final Text actiontarget12 = new Text();
+        grid.add(actiontarget12, 0, 20);
+        GridPane.setColumnSpan(actiontarget12, 2);
+        GridPane.setHalignment(actiontarget12, RIGHT);
+        actiontarget12.setId("actiontarget12");
+
+
+        btn12.setOnAction(e -> {
+
+            actiontarget12.setFill(Color.FIREBRICK);
+
+            if (spawnRectangle == null) {
+                spawnRectangle = spawnObject.spawn();
+                drawScene(grid);
+            }
+
+            if (search(spawnRectangle, 1)) {
+                if (findPosition == null)
+                    findPosition = new FindPosition(this);
+
+                actiontarget12.setText(findPosition.detectPosition());
+
+
+            } else
+                actiontarget12.setText("Not found");
+
+
+        });
+
+        Button btn13 = new Button("Point Pos");
+        HBox hbBtn13 = new HBox(10);
+        hbBtn13.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn13.getChildren().add(btn13);
+        grid.add(hbBtn13, 1, 19);
+
+
+        btn13.setOnAction(e -> {
+
+
+            if (findPosition == null)
+                findPosition = new FindPosition(this);
+
+            background.setOnMouseClicked(event -> {
+                if (findPosition != null) {
+                    findPosition.setPoint(event);
+                    btn13.fire();
+                }
+            });
+
+            if (!findPosition.isPointConfirmed()) {
+                actiontarget12.setText("Click on point");
+            } else {
+
+                circleA.setCenterX(findPosition.getX());
+                circleA.setCenterY(findPosition.getY());
+                circleA.setRadius(7);
+                circleA.setFill(Color.BLUE);
+
+                resetBackground();
+                findPosition.resetPoint();
+
+
+                if (search(circleA, 1)) {
+
+                    actiontarget12.setText(findPosition.detectPosition());
+
+
+                } else
+                    actiontarget12.setText("Not found");
+            }
+
+
+        });
+
     }
 
     private void setAngleF() {
@@ -603,13 +712,13 @@ public class Login extends Application {
         return trig;
     }
 
-    private boolean search() {
+    private boolean search(Shape spawnRectangle, int delta) {
         //boolean found = false;
         //int angle = Integer.valueOf(angle1Field.getText());
         createSearchingLine();
 
         System.out.println("in search");
-        int delta = 1;
+        //int delta = 1;
 
         for (int angle = (int) angleF + 1; angle <= 360 + (int) angleF; angle += delta) {
 
@@ -625,6 +734,7 @@ public class Login extends Application {
                 rotate(angle, length);
 
                 if (spawnRectangle.contains(searchingLine.getEndX(), searchingLine.getEndY())) {
+                    searchAngle = angle;
                     return true;
                 }
 

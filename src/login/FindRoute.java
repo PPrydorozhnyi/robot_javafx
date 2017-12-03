@@ -50,6 +50,7 @@ class FindRoute {
 
     private boolean first = true;
     private int caseM;
+    boolean curve;
 
     private FindRoute(Login login) {
         this.login = login;
@@ -266,10 +267,11 @@ class FindRoute {
             trigger = moving(actiontarget, Direction.RIGHT);
         }
 
-        logger.debug(String.valueOf(trigger));
+        //logger.debug(String.valueOf(trigger));
 
         if (trigger) {
-            first = true;
+            if (!curve)
+                first = true;
         }
         else
             caseM = 2;
@@ -356,7 +358,7 @@ class FindRoute {
             case BACK:
 
                 login.rotate.setAngle(180);
-                System.out.println("login.angleF = " + login.angleF);
+                //System.out.println("login.angleF = " + login.angleF);
                 dx = -circleWidth;
                 dy = 0;
 
@@ -426,7 +428,7 @@ class FindRoute {
                         login.circle.intersects(login.circleB.getBoundsInLocal()))) {
 
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(300);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
